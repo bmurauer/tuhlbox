@@ -1,3 +1,4 @@
+"""Transformers working on NLTK tree objects."""
 import nltk
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -12,9 +13,11 @@ class StringToTreeTransformer(BaseEstimator, TransformerMixin):
     """
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the data."""
         result = []
         for document in x:
             ret = []
@@ -41,9 +44,11 @@ class WordToPosTransformer(BaseEstimator, TransformerMixin):
     """
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the data."""
         ret = []
         for document in x:
             tmp = []
@@ -55,8 +60,7 @@ class WordToPosTransformer(BaseEstimator, TransformerMixin):
 
 class TreeChainTransformer(BaseEstimator, TransformerMixin):
     """
-    Creates chains of strings with an optional length limit from nltk tree
-    structures.
+    Create chains of strings with an optional max length from tree structures.
 
     For each leaf node, its path to the root node is called a chain.
     This transformer returns every subchain with a certain length from every
@@ -69,36 +73,41 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
     output document: the format of the output documents depend on the
     combination parameters.
 
-    Args:
-        max_length (int): the maximum length of the produced chains. If set to
-            None, only full chains of any length will be returned.
 
-        combine_chain_elements (str): if set to any string other than None,
-            each chain will be returned as a string (e.g., \"PRON VERB NOUN\")
-            instead of a list. The parameter is used to join the chains.
-            Defaults to None.
-
-        combine_chains (str): if set to true, return each document as the
-            concatenation of all chains for all trees in the document. If set
-            to None, returns a list of sentences for each document, where each
-            sentence conists of a list of chains. The parameter is used to join
-            the chains. Defaults to None.gv
-
-        combine_strings (str): if set, it will be used to join the tree chains
-            together to a single string per document. The parameter is used to
-            join the chains. Defaults to None.
 
 
     """
 
     def __init__(
-        self,
-        max_length=None,
-        combine_chain_elements=None,
-        combine_chains=None,
-        combine_strings=None,
+            self,
+            max_length=None,
+            combine_chain_elements=None,
+            combine_chains=None,
+            combine_strings=None,
     ):
+        """
+        Initialize class.
 
+        Args:
+            max_length (int): the maximum length of the produced chains.
+                If set to None, full chains of any length will be returned.
+
+        combine_chain_elements (str): if set to any string other than None,
+                each chain will be returned as a string
+                (e.g., "PRON VERB NOUN")
+                instead of a list. The parameter is used to join the chains.
+                Defaults to None.
+
+        combine_chains (str|None):  if set to true, return each document as the
+                concatenation of all chains for all trees in the document. If
+                set to None, returns a list of sentences for each document,
+                where each sentence consists of a list of chains. The parameter
+                 is used to join the chains. Defaults to None.
+
+        combine_strings (str|None): if set, it will be used to join the tree
+                chains together to a single string per document. The parameter
+                is used to join the chains. Defaults to None.
+        """
         if combine_strings is not None and combine_chains is None:
             raise ValueError(
                 'if combine_strings is set, both combine_chains and '
@@ -116,6 +125,7 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         self.combine_strings = combine_strings
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     # please be careful, it is dangerous in here!
@@ -139,6 +149,7 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         return ret_full
 
     def transform(self, x, y=None):
+        """Transform the data."""
         result = []
         for document in x:
             #  a document consists of a list of nltk.Tree objects
@@ -164,84 +175,98 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         return result
 
 
+def _get_average_height(document):
+    """Calculate the average height of all trees in a document."""
+    return np.average([tree.height() for tree in document])
+
+
+def _calculate_average_children(tree):
+    result = []
+    if type(tree) != nltk.tree.Tree or not tree:
+        result.append(0)
+    else:
+        result.append(len(tree))
+        for child in tree:
+            result += _calculate_average_children(child)
+    return result
+
+
+def _get_average_children(document):
+    result = []
+    for tree in document:
+        result += _calculate_average_children(tree)
+    return np.average(result)
+
+
+def _get_average_inner_to_leaf_ratio(document):
+    result = []
+    for tree in document:
+        num_leaves = len(tree.leaves())
+        num_total = len(tree.treepositions()) - 1  # root node
+        result.append(num_leaves / num_total)
+    return np.average(result)
+
+
+def _get_max_tree_width(tree):
+    maximum = 0
+    if type(tree) == nltk.tree.Tree:
+        for child in tree:
+            maximum = max(maximum, _get_max_tree_width(child),
+                          len(tree))
+    return maximum
+
+
+def _get_max_child_width(document):
+    result = []
+    for tree in document:
+        result.append(_get_max_tree_width(tree))
+    return np.average(result)
+
+
 class TreeStatsVectorizer(TransformerMixin, BaseEstimator):
     """
-    calculates high-level, low-complexity tree features
+    Calculate high-level, low-complexity tree features.
+
+    This transformer creates aggregated high-level features that are not
+    dependent on the content of the tree.
 
     input: list of list of trees
     output: list of list of numbers/floats
     """
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the data."""
         result = []
         for document in x:
             result.append(
                 [
-                    self.get_average_height(document),
-                    self.get_average_children(document),
-                    self.get_average_inner_to_leaf_ratio(document),
-                    self.get_max_child_width(document),
+                    _get_average_height(document),
+                    _get_average_children(document),
+                    _get_average_inner_to_leaf_ratio(document),
+                    _get_max_child_width(document),
                 ]
             )
         return result
 
-    def get_average_height(self, document):
-        return np.average([tree.height() for tree in document])
-
-    def _calculate_average_children(self, tree):
-        result = []
-        if type(tree) != nltk.tree.Tree or not tree:
-            result.append(0)
-        else:
-            result.append(len(tree))
-            for child in tree:
-                result += self._calculate_average_children(child)
-        return result
-
-    def get_average_children(self, document):
-        result = []
-        for tree in document:
-            result += self._calculate_average_children(tree)
-        return np.average(result)
-
-    def get_average_inner_to_leaf_ratio(self, document):
-        result = []
-        for tree in document:
-            num_leaves = len(tree.leaves())
-            num_total = len(tree.treepositions()) - 1  # root node
-            result.append(num_leaves / num_total)
-        return np.average(result)
-
-    def _get_max_tree_width(self, tree):
-        maximum = 0
-        if type(tree) == nltk.tree.Tree:
-            for child in tree:
-                maximum = max(maximum, self._get_max_tree_width(child),
-                              len(tree))
-        return maximum
-
-    def get_max_child_width(self, document):
-        result = []
-        for tree in document:
-            result.append(self._get_max_tree_width(tree))
-        return np.average(result)
-
 
 class TreeToStringTransformer(BaseEstimator, TransformerMixin):
     """
-    Transforms nltk trees into strings that can be parsed later
+    Transforms nltk trees into strings that can be parsed later.
 
     input: list of list of trees
     output: list of list of strings
     """
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform the data."""
         ret = []
         for document in x:
             doc = []
@@ -261,14 +286,17 @@ class TreeToFlatStringTransformer(TransformerMixin, BaseEstimator):
     """
 
     def fit(self, X, y=None, **fit_args):
+        """Fit the model."""
         return self
 
     def parse(self, document):
+        """Convert a string to a NLTK tree."""
         result = [document.label()]
         result += [self.parse(child) for child in document]
         return ' '.join(result)
 
     def transform(self, X):
+        """Transform the data."""
         result = []
         for document in X:
             parses = [self.parse(sentence) for sentence in document]

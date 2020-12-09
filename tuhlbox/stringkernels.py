@@ -1,14 +1,15 @@
+"""Transformers calculating string kernels."""
+import logging
 from collections import defaultdict
 
 import numpy as np
-import logging
-logger = logging.getLogger(__name__)
-
 from sklearn.base import BaseEstimator, TransformerMixin
 
+logger = logging.getLogger(__name__)
 
 
 def presence_kernel(x, y, ngram_min, ngram_max):
+    """Calculate the presence kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
         if type(string) == str:
@@ -35,6 +36,7 @@ def presence_kernel(x, y, ngram_min, ngram_max):
 
 
 def spectrum_kernel(x, y, ngram_min, ngram_max):
+    """Calculate the spectrum kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
         if type(string) == str:
@@ -59,6 +61,7 @@ def spectrum_kernel(x, y, ngram_min, ngram_max):
 
 
 def intersection_kernel(x, y, ngram_min, ngram_max):
+    """Calculate the intersection kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
         if type(string) == str:
@@ -86,9 +89,9 @@ def intersection_kernel(x, y, ngram_min, ngram_max):
 
 
 kernel_map = {
-    "presence": presence_kernel,
-    "spectrum": spectrum_kernel,
-    "intersection": intersection_kernel,
+    'presence': presence_kernel,
+    'spectrum': spectrum_kernel,
+    'intersection': intersection_kernel,
 }
 
 
@@ -101,28 +104,38 @@ class StringKernelTransformer(BaseEstimator, TransformerMixin):
     Output: m x n matrix containing the kernel similarities between the strings
     """
 
-    def __init__(self, kernel_type="intersection", ngram_range=None,
+    def __init__(self, kernel_type='intersection', ngram_range=None,
                  normalize=True):
+        """
+        Initialize the model.
+
+        Args:
+            kernel_type: one of 'intersection', 'spectrum' or 'presence'.
+            ngram_range: range of n_grams to include
+            normalize: whether to normalize the output across the corpus.
+        """
         if ngram_range is None:
             ngram_range = (5, 10)
         self.ngram_range = ngram_range
         self.normalize = normalize
         self.kernel_type = kernel_type
         if kernel_type not in kernel_map:
-            raise ValueError(f"unknown kernel: {kernel_type}")
+            raise ValueError(f'unknown kernel: {kernel_type}')
         self._kernel = kernel_map[kernel_type]
         self._train_data = None
         self._train_kernel = None
 
     def fit(self, X, y=None):
+        """Fit model."""
         self._train_data = np.array(X)
         self._train_kernel = self._kernel(X, X, *self.ngram_range)
         for i in range(len(X)):
             if self._train_kernel[i, i] == 0:
-                logger.error(f"zeros in diagonal at ({i},{i}) for {X[i]}")
+                logger.error(f'zeros in diagonal at ({i},{i}) for {X[i]}')
         return self
 
     def transform(self, X, y=None):
+        """Transform data."""
         X = np.array(X)
         _st = self._kernel(X, self._train_data, *self.ngram_range)
 
@@ -135,7 +148,7 @@ class StringKernelTransformer(BaseEstimator, TransformerMixin):
         result = np.copy(_st)
         for i in range(_st.shape[0]):
             if _tt[i, i] == 0:
-                logger.error(f"zeros in diagonal at ({i},{i}) for {X[i]}")
+                logger.error(f'zeros in diagonal at ({i},{i}) for {X[i]}')
             for j in range(_st.shape[1]):
                 if _tt[i, i] != 0 and _ss[j, j] != 0:
                     result[i, j] /= np.sqrt(_tt[i, i] * _ss[j, j])

@@ -1,7 +1,9 @@
+"""Tests Second-Order Models."""
 from tuhlbox.subfreq import SubFrequencyVectorizer
 
 
 def test_subset_vectorizer():
+    """Test if the transformer produces correct output shapes."""
     transformer = SubFrequencyVectorizer()
 
     texts = [

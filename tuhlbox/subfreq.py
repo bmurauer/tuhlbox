@@ -1,18 +1,24 @@
+"""Transformer computing second-order attributes."""
+
+import logging
 import math
 from collections import defaultdict
 
 import numpy as np
-import logging
-logger = logging.getLogger(__name__)
 from sklearn.base import BaseEstimator, TransformerMixin
+
+logger = logging.getLogger(__name__)
 
 
 class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
+    """Transformer computing second-order attributes."""
 
     def __init__(self):
+        """Initialize the model."""
         self.t = defaultdict(np.array)
 
     def fit(self, X, y=None, **fit_params):
+        """Fit data to model."""
         words = set()
 
         logger.info('starting phase 0')
@@ -49,6 +55,7 @@ class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X):
+        """Transform data due to previously learned frequencies."""
         result = []
         for k in X:
             document_sum = 0

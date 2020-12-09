@@ -1,0 +1,15 @@
+image: python:3.7
+
+tests:
+  before_script:
+    - echo $HOME
+    - echo $HTTP_PROXY
+    - echo $HTTPS_PROXY
+    - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+    - source $HOME/.poetry/env
+    - poetry config virtualenvs.create false
+    - poetry install
+    - python -m nltk.downloader punkt
+    - python -c 'import stanza; stanza.download("en", force=True)'
+  script:
+    - pytest tests

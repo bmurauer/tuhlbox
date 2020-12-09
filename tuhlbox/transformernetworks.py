@@ -1,3 +1,5 @@
+"""Generic Wrapper for Transformer-Based models."""
+
 import numpy as np
 import pandas as pd
 from simpletransformers.classification import ClassificationModel
@@ -5,6 +7,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
+    """Generic Wrapper for Transformer Models."""
+
     def __init__(
         self,
         model_type='distilbert',
@@ -37,7 +41,7 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
         silent=False,
         use_multiprocessing=True,
     ):
-
+        """Look at the documentation of simpletransformers for details."""
         self.model_type = model_type
         self.pretrained_model = pretrained_model
         self.output_dir = output_dir
@@ -100,6 +104,7 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
         }
 
     def fit(self, x, y, *args, **kwargs):
+        """Fit the model."""
         targets = set(y)
         n_classes = len(targets)
         for target in targets:
@@ -126,6 +131,7 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
         self.model.train_model(df)
 
     def predict(self, x, *args, **kwargs):
+        """Predict unseen documents."""
         result, raw = self.model.predict(x)
         return result
 

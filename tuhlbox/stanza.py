@@ -54,8 +54,7 @@ def _get_features_per_word(document):
 
 class StanzaWordFeatureFrequencyTransformer(BaseEstimator, TransformerMixin):
     """
-    Returns a frequency matrix for all grammar features for each word of each
-    document.
+    Return a frequency matrix for all features for each word of each document.
 
     This transformer looks for the file resources/word_features.json, where all
     possible values should be stored (unfortunately, stanfordnlp does not offer
@@ -65,14 +64,17 @@ class StanzaWordFeatureFrequencyTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self):
+        """Initialize class."""
         with open(WORD_FEATURES_JSON) as i_fh:
             self.features = json.load(i_fh)
             self.features.append(UNKNOWN_KEY)  # for unknown keys
 
     def fit(self, X, y=None, **fit_kwargs):
+        """Fit the model."""
         return self
 
     def transform(self, X, y=None):
+        """Transform documents."""
         result = []
         for document in X:
             doc = {}
@@ -102,12 +104,20 @@ class StanzaNlpToFieldTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, field=None):
+        """
+        Initialize class.
+
+        Args:
+            field: which part of a word (token) to use as representative.
+        """
         self.field = field
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform documents."""
         result = []
         for document in x:
             document_result = []
@@ -130,12 +140,23 @@ class StanzaNlpToFieldTransformer(BaseEstimator, TransformerMixin):
 
 class StanzaParserTransformer(BaseEstimator, TransformerMixin):
     """
+    Parses text using the stanza parser.
+
     This transformer takes text and parses it using the stanza python
     package, which uses theano and various neural models to parse different
     features from natural text.
     """
 
     def __init__(self, language, silent=False, cpu=False):
+        """
+        Initialize class.
+
+        Args:
+            language: which language to use for parsing.
+            silent: if true, don't show a progress bar
+            cpu: if true, use cpu instead of gpu. Useful for memory-intensive
+                parse tasks.
+        """
         self.language = language
         self.silent = silent
         self.cpu = cpu
@@ -145,9 +166,11 @@ class StanzaParserTransformer(BaseEstimator, TransformerMixin):
         self.nlp = stanza.Pipeline(lang=self.language, use_gpu=not cpu)
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform documents."""
         result = []
         if self.silent:
             pbar = x
@@ -162,6 +185,8 @@ class StanzaParserTransformer(BaseEstimator, TransformerMixin):
 
 class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
     """
+    Transform Stanza Documents into NLTK trees.
+
     This transformer takes documents created by the stanza python package
     and transforms them into dependency trees in nltk format.
 
@@ -174,7 +199,7 @@ class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self, node_labels=None):
         """
-        Initializes transformer.
+        Initialize transformer.
 
         Args:
             node_labels (list of str): how each word is represented. Provide a
@@ -188,9 +213,11 @@ class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
         self.node_labels = node_labels
 
     def fit(self, x, y=None):
+        """Fit the model."""
         return self
 
     def transform(self, x, y=None):
+        """Transform documents."""
         result = []
         for document in x:
             sentences = []
@@ -210,6 +237,7 @@ class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
         return result
 
     def get_symbols(self, tree):
+        """Extract the symbol from the dependency relationship."""
         dependency = tree.label()
         if isinstance(dependency, str):
             return nltk.Tree(dependency, [self.get_symbols(c) for c in tree])
@@ -229,6 +257,7 @@ class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
         return result
 
     def get_nodes(self, tree):
+        """Extract the leaf nodes from a tree."""
         leaves = []
         if isinstance(tree, nltk.Tree):
             if not isinstance(tree.label(), str):
@@ -238,6 +267,7 @@ class StanzaToNltkTreesTransformer(BaseEstimator, TransformerMixin):
         return leaves
 
     def parse(self, sentence):
+        """Construct a NLTK tree from stanza dependencies."""
         roots = [d for d in sentence.dependencies if d[1] == 'root']
         unprocessed = [d for d in sentence.dependencies if d not in roots]
         # it is possible that multiple words have a root relationship
