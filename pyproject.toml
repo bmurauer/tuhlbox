@@ -1,7 +1,8 @@
 [tool.poetry]
 name = "tuhlbox"
 version = "0.1.1"
-description = ""
+url = "https://git.uibk.ac.at/csak8736/tuhlbox"
+description = "Personal toolbox of language processing models."
 authors = ["Benjamin Murauer <b.murauer@posteo.de>"]
 
 [tool.poetry.dependencies]
