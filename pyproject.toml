@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "tuhlbox"
+version = "0.1.0"
+description = ""
+authors = ["Benjamin Murauer <b.murauer@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+sklearn = "^0.0"
+treegrams = "^0.1.0"
+gensim = "^3.8.3"
+dstoolbox = "^0.10.1"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,227 @@
+import itertools
+import unittest
+
+import numpy as np
+
+from tuhlbox.life import LifeVectorizer
+
+
+class TestLife(unittest.TestCase):
+    def test_short_fragment(self):
+        fragment_sizes = [1000]  # larger than text
+        text = [str(x) for x in range(100)]
+
+        transformer = LifeVectorizer(fragment_sizes, 1, "fragment", force=True)
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertEqual(actual, predicted)
+
+    def test_short_bow(self):
+        fragment_sizes = [1000]  # larger than text
+        text = [str(x) for x in range(100)]
+
+        transformer = LifeVectorizer(fragment_sizes, 1, "bow", force=True)
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [100.0, 100.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertEqual(actual, predicted)
+
+    def test_short_both(self):
+        fragment_sizes = [1000]  # larger than text
+        text = [str(x) for x in range(100)]
+
+        transformer = LifeVectorizer(fragment_sizes, 1, "both", force=True)
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [
+            100.0,
+            100.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            100.0,
+            100.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+        self.assertEqual(actual, predicted)
+
+    def test_short_document_exceptions(self):
+        text = [str(x) for x in range(100)]
+        for m in ["fragment", "bow", "both"]:
+            transformer = LifeVectorizer([1000], 1, m, force=False)
+            self.assertRaises(ValueError, transformer.transform, text)
+
+    def test_random_shape_sizes(self):
+        n_sizes = np.random.randint(1, 10)
+        fragment_sizes = np.random.randint(2, 50, size=n_sizes)
+        text = [str(x) for x in range(100)]
+
+        vec1 = LifeVectorizer(fragment_sizes, 1, "fragment")
+        vec2 = LifeVectorizer(fragment_sizes, 1, "bow")
+        vec3 = LifeVectorizer(fragment_sizes, 1, "both")
+
+        self.assertEqual(vec1.transform(text)[0].shape, (n_sizes * 8,))
+        self.assertEqual(vec2.transform(text)[0].shape, (n_sizes * 8,))
+        self.assertEqual(vec3.transform(text)[0].shape, (n_sizes * 16,))
+
+    def test_life_single_fragment(self):
+        transformer = LifeVectorizer([42], 50, "fragment")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [42.0, 42.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertEqual(actual, predicted)
+
+    def test_life_single_bow(self):
+        transformer = LifeVectorizer([42], 100, "bow")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [42.0, 42.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertEqual(actual, predicted)
+
+    def test_life_single_bfs(self):
+        transformer = LifeVectorizer([42], 100, "both")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [
+            42.0,
+            42.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            42.0,
+            42.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+        self.assertEqual(actual, predicted)
+
+    def test_life_double_fragment(self):
+        transformer = LifeVectorizer([42, 41], 50, "fragment")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [
+            42.0,
+            42.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            41.0,
+            41.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+        self.assertEqual(actual, predicted)
+
+    def test_life_double_bow(self):
+        transformer = LifeVectorizer([42, 41], 100, "bow")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [
+            42.0,
+            42.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            41.0,
+            41.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+        self.assertEqual(actual, predicted)
+
+    def test_life_double_bfs(self):
+        rand_1 = np.random.randint(2, 100)
+        rand_2 = np.random.randint(2, 100)
+        transformer = LifeVectorizer([rand_1, rand_2], 100, "both")
+        text = [str(x) for x in range(100)]
+        actual = transformer.transform([text])[0].tolist()
+        predicted = [
+            float(rand_1),
+            float(rand_1),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            float(rand_1),
+            float(rand_1),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            float(rand_2),
+            float(rand_2),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            float(rand_2),
+            float(rand_2),
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+        ]
+        self.assertEqual(actual, predicted)
+
+    def test_life_half_fragment(self):
+        frag_size = np.random.randint(2, 100)
+        transformer = LifeVectorizer([frag_size], 100, "fragment")
+        # this text consists of pairs of two identical words
+        pairs = [(y, y) for y in range(100)]
+        text = list(itertools.chain.from_iterable(pairs))
+        actual = transformer.transform([text])[0].tolist()
+
+        vocabulary_size = actual[0]
+        freq_1_count = actual[1]
+        freq_4_count = actual[2]
+        freq_10_count = actual[3]
+
+        self.assertTrue(vocabulary_size <= frag_size / 2 + 1)
+        self.assertTrue(vocabulary_size >= frag_size / 2)
+        #  in the most extreme case, no samples have a hapax legomena
+        self.assertTrue(freq_1_count >= 0)
+        #  in the most extreme case, all samples have 2 hapax legomena
+        self.assertTrue(freq_1_count <= 2)
+        #  in the most extreme case, all samples have 2 hapax legomena and
+        #  (frag_size-2)/2 dis legomena
+        self.assertTrue(freq_4_count >= frag_size / 2 - 1)
+        #  in the most extreme case, no samples have hapax legomena and
+        #  frag_size/2 dis legomena
+        self.assertTrue(freq_4_count <= frag_size / 2)
+        #  no sample should have word occurring more often than twice
+        self.assertAlmostEqual(freq_10_count, 0.0)
