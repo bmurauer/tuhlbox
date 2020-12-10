@@ -7,6 +7,17 @@ from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from tensorflow.keras.callbacks import TensorBoard
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
+from tensorflow.keras.layers import (
+    LSTM,
+    Bidirectional,
+    Conv1D,
+    Dense,
+    Flatten,
+    GlobalMaxPooling1D,
+    MaxPooling1D,
+    Dropout,
+)
+from tensorflow.keras.models import Sequential
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +32,7 @@ class MaxLengthPadder(TransformerMixin, BaseEstimator):
         self.pad_value = pad_value
         self.min_length = min_length
 
-    def fit(self, X, y=None, **fit_params):
+    def fit(self, x, y=None, **fit_params):
         return self
 
     def transform(self, documents):
@@ -99,3 +110,35 @@ class KerasModel(BaseEstimator, ClassifierMixin):
     def configuration(self):
         """Return a database representation for this model."""
         return self.get_params()
+
+
+def make_cnn(embedding_layer, num_classes):
+    model = Sequential([
+        embedding_layer,
+        Dropout(0.25),
+        Conv1D(500, 3, padding='same'),
+        MaxPooling1D(),
+        Conv1D(500, 4, padding='same'),
+        MaxPooling1D(),
+        Conv1D(500, 5, padding='same'),
+        GlobalMaxPooling1D(),
+        Dense(num_classes, activation='softmax'),
+    ])
+    model.compile(loss='categorical_crossentropy', optimizer='adam',
+                  metrics=['accuracy'])
+    return model
+
+
+def make_lstm(embedding_layer, num_classes):
+    model = Sequential([
+        embedding_layer,
+        Bidirectional(LSTM(256, activation='relu', return_sequences=True)),
+        Dropout(0.25),
+        Bidirectional(LSTM(256, activation='relu', return_sequences=True)),
+        Flatten(),
+        Dropout(0.25),
+        Dense(num_classes, activation='softmax'),
+    ])
+    model.compile(loss='categorical_crossentropy', optimizer='adam',
+                  metrics=['accuracy'])
+    return model
