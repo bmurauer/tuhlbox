@@ -2005,7 +2005,7 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.6.1,<4"
-content-hash = "abfc14f923029f7d96c7aefe2425ce9c02bb1f0a97d8b2d580f1b3c4098cd7b7"
+content-hash = "42db0573b817e51301db2c0abda4a9952c3666823c5edb6e5b5bda3d732bbf08"
 
 [metadata.files]
 absl-py = [
