@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tuhlbox"
-version = "0.1.6"
+version = "0.1.7"
 homepage = "https://git.uibk.ac.at/csak8736/tuhlbox"
 description = "Personal toolbox of language processing models."
 authors = ["Benjamin Murauer <b.murauer@posteo.de>"]
