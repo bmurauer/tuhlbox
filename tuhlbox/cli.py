@@ -77,7 +77,7 @@ def reddit_to_common(input_directory):
                 name_ext = os.path.basename(json_file)
                 name = os.path.splitext(name_ext)[0]
                 text_name = f'{author}_{language}_{name}.txt'
-                text_file = os.path.join(text_directory, text_name)
+                text_file = os.path.join(FEATURE_TEXT, text_name)
                 with open(json_file) as i_f, open(text_file, 'w') as o_f:
                     js = json.load(i_f)
                     o_f.write(js['body_clean'])
