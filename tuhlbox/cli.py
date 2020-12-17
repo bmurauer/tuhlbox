@@ -84,7 +84,7 @@ def reddit_to_common(input_directory):
                     del js['body']
                     del js['body_clean']
                     js[FEATURE_TEXT] = text_file
-                    js['group_directory'] = language  # important for deepl_...
+                    js['group_field'] = language  # important for deepl_...
                     records.append(js)
 
         # move old author dir
