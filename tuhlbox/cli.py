@@ -1,17 +1,23 @@
 """Dataset manipulation scripts."""
 
 import json
+import logging
+import os
 import pickle
 import shutil
+import sys
+import warnings
+from copy import deepcopy
 from glob import glob
+from urllib.error import HTTPError
+from urllib.request import urlretrieve
 
 import click
-import os
-import warnings
 import pandas as pd
 import stanza
+import torch
 from tqdm import tqdm
-import logging
+from transformers import MarianMTModel, MarianTokenizer
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +26,10 @@ FEATURE_STANZA = 'stanza'
 FEATURE_CONSTITUENTS = 'constituencies'
 LANGUAGE_COLUMN = 'language'
 DATASET_CSV = 'dataset.csv'
+HF_URL = 'https://s3.amazonaws.com/models.huggingface.co/bert/Helsinki-NLP'
+FILES = ['config.json', 'pytorch_model.bin', 'source.spm',
+         'target.spm', 'tokenizer_config.json', 'vocab.json']
+MODEL_DIR = 'translation_data'
 
 
 @click.command(help='transforms corpora created with the reddit script into '
@@ -216,3 +226,107 @@ def parse_constituency(input_directory, text_column_name,
     #     sub_dfs[language] = sub_df
     #
     # pd.concat(sub_dfs, axis=0).to_csv(DATASET_CSV + '2', index=False)
+
+
+
+class Translator:
+
+    def __init__(self, source_language, target_language,
+                 model_dir='translation_models', force_download=False):
+        self.source_language = source_language
+        self.target_language = target_language
+        self.model_dir = model_dir
+        self.force_download = force_download
+
+        self.model_name = (f'opus-mt-{self.source_language}-'
+                           f'{self.target_language}')
+        self.model_dir = os.path.join(self.model_dir, self.model_name)
+
+        if not os.path.isdir(self.model_dir or self.force_download):
+            self.download_language_model()
+
+        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
+        logger.info('running on device: %s', self.device)
+
+        self.model = MarianMTModel.from_pretrained(self.model_dir).to(
+            torch.device(self.device))
+        self.tokenizer = MarianTokenizer.from_pretrained(self.model_dir)
+
+    def download_language_model(self):
+        if os.path.isdir(self.model_dir):
+            shutil.rmtree(self.model_dir)
+        os.makedirs(self.model_dir)
+        for f in FILES:
+            file_url = os.path.join(HF_URL, self.model_name, f)
+            file_path = os.path.join(self.model_dir, f)
+            try:
+                logger.info('downloading %s', file_url)
+                urlretrieve(file_url, file_path)
+            except HTTPError as e:
+                logger.error('Error retrieving model from url.'
+                             'Please confirm model exists: %s', e)
+                sys.exit(1)
+
+    def fit(self, X, y=None, **fit_params):
+        return self
+
+    def translate(self, sentences):
+        result = []
+        for sentence in tqdm(sentences, leave=False):
+            batch = self.tokenizer.prepare_seq2seq_batch(src_texts=[sentence],
+                                                         return_tensors='pt')
+            translated = self.model.generate(**batch.to(self.device))
+            result += self.tokenizer.batch_decode(translated,
+                                                  skip_special_tokens=True)
+        return result
+
+
+@click.command(help='translates data')
+@click.argument('input-dir')
+@click.argument('source')
+@click.argument('target')
+def translate(input_dir, source, target):
+    key = f'marianmt_{source}_to_{target}'
+    df = pd.read_csv(os.path.join(input_dir, 'dataset.csv'))
+    df = df.drop(columns=[c for c in df.columns if c.startswith('Unnamed: 0')])
+    sub_df = df[df['language'] == source]
+
+    logger.info('loading translation model')
+    translator = Translator(source, target)
+
+    new_rows = []
+
+    for index, row in tqdm(sub_df.iterrows(), total=sub_df.shape[0]):
+        new_row = deepcopy(row)
+        old_path = os.path.join(input_dir, row['stanza'])
+        old_name = os.path.splitext(os.path.basename(old_path))[0]
+        new_name = old_name + '__' + key
+        new_path_part = os.path.join('text_raw', new_name + '.txt')
+        new_path = os.path.join(input_dir, new_path_part)
+        new_row['text_raw'] = new_path_part
+        new_row['stanza'] = None
+        new_row['language'] = key
+
+        new_dir = os.path.dirname(new_path)
+        if not os.path.isdir(new_dir):
+            os.makedirs(new_dir)
+
+        # sometimes, empty files are created when interrupting a process
+        if os.path.isfile(new_path) and os.stat(new_path).st_size == 0:
+            os.unlink(new_path)
+
+        # don't re-compute stuff we already have
+        if os.path.isfile(new_path):
+            continue
+
+        with open(old_path, 'rb') as i_f, open(new_path, 'w') as o_f:
+            document = pickle.load(i_f)
+            sentences = [sentence.text for sentence in document.sentences]
+            translations = translator.translate(sentences)
+            o_f.write('\n'.join(translations))
+
+        new_rows.append(new_row)
+
+    df2 = pd.DataFrame.from_records(new_rows)
+    df3 = pd.concat([df, df2])
+    df3.to_csv(os.path.join(input_dir, 'dataset.csv'), index=False)

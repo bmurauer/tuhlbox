@@ -27,6 +27,7 @@ flake8-docstrings = "^1.5.0"
 [tool.poetry.scripts]
 reddit_to_common = "tuhlbox.cli:reddit_to_common"
 parse_dependency = "tuhlbox.cli:parse_dependency"
+translate = "tuhlbox.cli:translate"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
