@@ -228,11 +228,20 @@ def parse_constituency(input_directory, text_column_name,
     # pd.concat(sub_dfs, axis=0).to_csv(DATASET_CSV + '2', index=False)
 
 
-
 class Translator:
+    """Simple translator wrapper for Hugging Face models."""
 
     def __init__(self, source_language, target_language,
                  model_dir='translation_models', force_download=False):
+        """
+        Initialize the translator.
+
+        Args:
+            source_language: two-letter code for the source language
+            target_language: two-letter code for the target language
+            model_dir: directory where to store the cached translation models
+            force_download: if true, overwrite existing cached models
+        """
         self.source_language = source_language
         self.target_language = target_language
         self.model_dir = model_dir
@@ -243,7 +252,7 @@ class Translator:
         self.model_dir = os.path.join(self.model_dir, self.model_name)
 
         if not os.path.isdir(self.model_dir or self.force_download):
-            self.download_language_model()
+            self._download_language_model()
 
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
         logger.info('running on device: %s', self.device)
@@ -252,7 +261,7 @@ class Translator:
             torch.device(self.device))
         self.tokenizer = MarianTokenizer.from_pretrained(self.model_dir)
 
-    def download_language_model(self):
+    def _download_language_model(self):
         if os.path.isdir(self.model_dir):
             shutil.rmtree(self.model_dir)
         os.makedirs(self.model_dir)
@@ -267,10 +276,17 @@ class Translator:
                              'Please confirm model exists: %s', e)
                 sys.exit(1)
 
-    def fit(self, X, y=None, **fit_params):
-        return self
-
     def translate(self, sentences):
+        """
+        Translate sentences for source to target language.
+
+        Args:
+            sentences: list of strings to translate. Each sentence will be
+                translated separately for memory reasons.
+
+        Returns: list of translated sentences.
+
+        """
         result = []
         for sentence in tqdm(sentences, leave=False):
             batch = self.tokenizer.prepare_seq2seq_batch(src_texts=[sentence],
@@ -286,6 +302,20 @@ class Translator:
 @click.argument('source')
 @click.argument('target')
 def translate(input_dir, source, target):
+    """
+    Translate common datafrarme corpora.
+
+    The corpora that is to be translated should already contain the 'stanza'
+    column of parsed sentences, as this will have better sentence segmentation.
+
+    Args:
+        input_dir: directory containing the dataset.csv file.
+        source: two-letter source language code
+        target: two-letter target language code
+
+    Returns: Nothing, this is a CLI script.
+
+    """
     key = f'marianmt_{source}_to_{target}'
     df = pd.read_csv(os.path.join(input_dir, 'dataset.csv'))
     df = df.drop(columns=[c for c in df.columns if c.startswith('Unnamed: 0')])

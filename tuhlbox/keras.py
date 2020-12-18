@@ -5,37 +5,47 @@ import numpy as np
 from dstoolbox.transformers import Padder2d
 from sklearn.base import BaseEstimator, ClassifierMixin, TransformerMixin
 from tensorflow.keras.callbacks import TensorBoard
-from tensorflow.keras.layers import Embedding
-from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
-from tensorflow.keras.layers import (
-    LSTM,
-    Bidirectional,
-    Conv1D,
-    Dense,
-    Flatten,
-    GlobalMaxPooling1D,
-    MaxPooling1D,
-    Dropout,
-)
+from tensorflow.keras.layers import (LSTM, Bidirectional, Conv1D, Dense,
+                                     Dropout, Embedding, Flatten,
+                                     GlobalMaxPooling1D, MaxPooling1D)
 from tensorflow.keras.models import Sequential
+from tensorflow.keras.wrappers.scikit_learn import KerasClassifier
 
 logger = logging.getLogger(__name__)
 
 
-def count_num_words(x):
+def _count_num_words(x):
     return int(max([max(document) for document in x])) + 1
 
 
 class MaxLengthPadder(TransformerMixin, BaseEstimator):
+    """Padding Transformer that pads to max length of documents."""
 
     def __init__(self, pad_value, min_length=5):
+        """
+        Initialize the transformer.
+
+        Args:
+            pad_value: Value to use for padding shorter sequences
+            min_length: optional minimum length to pad to.
+        """
         self.pad_value = pad_value
         self.min_length = min_length
 
     def fit(self, x, y=None, **fit_params):
+        """Fit the transformer."""
         return self
 
     def transform(self, documents):
+        """
+        Pad documents to the maximum length found within documents.
+
+        Args:
+            documents: list of sequences
+
+        Returns: list of padded sequences
+
+        """
         max_len = max([len(document) for document in documents]
                       + [self.min_length])
         print('max len is', max_len)
@@ -57,6 +67,7 @@ class KerasModel(BaseEstimator, ClassifierMixin):
     ):
         """
         Initialize the model.
+
         Args:
             model_fn: a keras model building function. See keras for details.
             embedding_dim: the dimension of the (first) embedding layer.
@@ -77,7 +88,7 @@ class KerasModel(BaseEstimator, ClassifierMixin):
 
     def fit(self, x, y, **fit_params):
         """Fit the model."""
-        num_words = count_num_words(x)
+        num_words = _count_num_words(x)
         sequence_length = len(x[0])
 
         if not self.exclude_embedding:
@@ -113,6 +124,15 @@ class KerasModel(BaseEstimator, ClassifierMixin):
 
 
 def make_cnn(embedding_layer, num_classes):
+    """
+    Create a simple CNN network.
+
+    Args:
+        embedding_layer: Pre-defined keras embedding layer.
+        num_classes: number of classes that are embedded.
+
+    Returns: an already compiled keras CNN model.
+    """
     model = Sequential([
         embedding_layer,
         Dropout(0.25),
@@ -130,6 +150,15 @@ def make_cnn(embedding_layer, num_classes):
 
 
 def make_lstm(embedding_layer, num_classes):
+    """
+    Create a simple LSTM network with two layers.
+
+    Args:
+        embedding_layer: Pre-defined keras embedding layer.
+        num_classes: number of classes that are embedded.
+
+    Returns: an already compiled keras LSTM model.
+    """
     model = Sequential([
         embedding_layer,
         Bidirectional(LSTM(256, activation='relu', return_sequences=True)),
