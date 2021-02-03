@@ -1,45 +1,45 @@
 """Generic Wrapper for Transformer-Based models."""
 
-import numpy as np
 import pandas as pd
 from simpletransformers.classification import ClassificationModel
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.preprocessing import LabelEncoder
 
 
-class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
+class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
     """Generic Wrapper for Transformer Models."""
 
     def __init__(
-        self,
-        model_type='distilbert',
-        pretrained_model='distilbert-base-uncased',
-        output_dir='outputs/',
-        cache_dir='cache/',
-        fp16=False,
-        fp16_opt_level='O1',
-        max_seq_length=256,
-        train_batch_size=8,
-        eval_batch_size=8,
-        gradient_accumulation_steps=1,
-        num_train_epochs=1,
-        weight_decay=0,
-        learning_rate=4e-5,
-        adam_epsilon=1e-8,
-        warmup_ratio=0.06,
-        warmup_steps=0,
-        max_grad_norm=1.0,
-        logging_steps=0,
-        evaluate_during_training=False,
-        save_steps=2000,
-        eval_all_checkpoints=True,
-        use_tensorboard=False,
-        overwrite_output_dir=False,
-        reprocess_input_data=True,
-        use_gpu=False,
-        use_cuda=False,
-        n_gpu=1,
-        silent=False,
-        use_multiprocessing=True,
+            self,
+            model_type='distilbert',
+            pretrained_model='distilbert-base-uncased',
+            output_dir='outputs/',
+            cache_dir='cache/',
+            fp16=False,
+            fp16_opt_level='O1',
+            max_seq_length=256,
+            train_batch_size=8,
+            eval_batch_size=8,
+            gradient_accumulation_steps=1,
+            num_train_epochs=1,
+            weight_decay=0,
+            learning_rate=4e-5,
+            adam_epsilon=1e-8,
+            warmup_ratio=0.06,
+            warmup_steps=0,
+            max_grad_norm=1.0,
+            logging_steps=0,
+            evaluate_during_training=False,
+            save_steps=2000,
+            eval_all_checkpoints=True,
+            use_tensorboard=False,
+            overwrite_output_dir=False,
+            reprocess_input_data=True,
+            use_gpu=False,
+            use_cuda=False,
+            n_gpu=1,
+            silent=False,
+            use_multiprocessing=True,
     ):
         """Look at the documentation of simpletransformers for details."""
         self.model_type = model_type
@@ -66,9 +66,7 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
         self.use_tensorboard = use_tensorboard
         self.overwrite_output_dir = overwrite_output_dir
         self.reprocess_input_data = reprocess_input_data
-        self.use_gpu = use_gpu
         self.use_cuda = use_cuda
-        self.n_gpu = n_gpu
         self.silent = silent
         self.use_multiprocessing = use_multiprocessing
 
@@ -77,42 +75,39 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
             'pretrained_model': self.pretrained_model,
             'output_dir': self.output_dir,
             'cache_dir': self.cache_dir,
-            'fp16': self.fp16,
-            'fp16_opt_level': self.fp16_opt_level,
-            'max_seq_length': self.max_seq_length,
-            'train_batch_size': self.train_batch_size,
-            'eval_batch_size': self.eval_batch_size,
-            'gradient_accumulation_steps': self.gradient_accumulation_steps,
-            'num_train_epochs': self.num_train_epochs,
-            'weight_decay': self.weight_decay,
-            'learning_rate': self.learning_rate,
-            'adam_epsilon': self.adam_epsilon,
-            'warmup_ratio': self.warmup_ratio,
-            'warmup_steps': self.warmup_steps,
-            'max_grad_norm': self.max_grad_norm,
-            'logging_steps': self.logging_steps,
-            'evaluate_during_training': self.evaluate_during_training,
-            'save_steps': self.save_steps,
-            'eval_all_checkpoints': self.eval_all_checkpoints,
-            'use_tensorboard': self.use_tensorboard,
+            # 'fp16': self.fp16,
+            # 'fp16_opt_level': self.fp16_opt_level,
+            # 'max_seq_length': self.max_seq_length,
+            # 'train_batch_size': self.train_batch_size,
+            # 'eval_batch_size': self.eval_batch_size,
+            # 'gradient_accumulation_steps': self.gradient_accumulation_steps,
+            # 'num_train_epochs': self.num_train_epochs,
+            # 'weight_decay': self.weight_decay,
+            # 'learning_rate': self.learning_rate,
+            # 'adam_epsilon': self.adam_epsilon,
+            # 'warmup_ratio': self.warmup_ratio,
+            # 'warmup_steps': self.warmup_steps,
+            # 'max_grad_norm': self.max_grad_norm,
+            # 'logging_steps': self.logging_steps,
+            # 'evaluate_during_training': self.evaluate_during_training,
+            # 'save_steps': self.save_steps,
+            # 'eval_all_checkpoints': self.eval_all_checkpoints,
+            # 'use_tensorboard': self.use_tensorboard,
             'overwrite_output_dir': self.overwrite_output_dir,
-            'reprocess_input_data': self.reprocess_input_data,
-            'use_gpu': self.use_gpu,
-            'n_gpu': self.n_gpu,
-            'silent': self.silent,
-            'use_multiprocessing': self.use_multiprocessing,
+            # 'reprocess_input_data': self.reprocess_input_data,
+            # 'silent': self.silent,
+            # 'use_multiprocessing': self.use_multiprocessing,
+            'dataloader_num_workers': 0,
         }
 
     def fit(self, x, y, *args, **kwargs):
         """Fit the model."""
+        self.label_encoder = LabelEncoder()
+        y = self.label_encoder.fit_transform(y)
         targets = set(y)
         n_classes = len(targets)
+
         for target in targets:
-            if not (isinstance(target, int) or isinstance(target, np.int64)):
-                raise TypeError(
-                    'This model only works on integer targets, but you passed:'
-                    f' {target} of type {type(target)}.'
-                )
             if target >= n_classes:
                 raise Exception(
                     f'target {target} is larger than n_classes ({n_classes}). '
@@ -133,8 +128,5 @@ class SimpletransformersBertModel(BaseEstimator, TransformerMixin):
     def predict(self, x, *args, **kwargs):
         """Predict unseen documents."""
         result, raw = self.model.predict(x)
+        result = self.label_encoder.inverse_transform(result)
         return result
-
-    @property
-    def _estimator_type(self):
-        return 'classifier'
