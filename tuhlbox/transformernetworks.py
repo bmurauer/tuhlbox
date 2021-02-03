@@ -122,7 +122,7 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             args=self.model_args,
             use_cuda=self.use_cuda,
         )
-        df = pd.DataFrame(zip(x, y))
+        df = pd.DataFrame(dict(text=x, labels=y))
         self.model.train_model(df)
 
     def predict(self, x, *args, **kwargs):
