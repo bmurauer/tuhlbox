@@ -80,7 +80,22 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
         self.no_cache = no_cache
         self.no_save = no_save
 
-        self.model_args = {
+    def fit(self, x, y, *args, **kwargs):
+        """Fit the model."""
+        self.label_encoder = LabelEncoder()
+        y = self.label_encoder.fit_transform(y)
+        targets = set(y)
+        n_classes = len(targets)
+
+        for target in targets:
+            if target >= n_classes:
+                raise Exception(
+                    f'target {target} is larger than n_classes ({n_classes}). '
+                    'this is not supported by pytorch and will cause a very '
+                    'hard to debug error.'
+                )
+
+        model_args = {
             'model_type': self.model_type,
             'pretrained_model': self.pretrained_model,
             'output_dir': self.output_dir,
@@ -115,26 +130,11 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             'no_cache': self.no_cache,
         }
 
-    def fit(self, x, y, *args, **kwargs):
-        """Fit the model."""
-        self.label_encoder = LabelEncoder()
-        y = self.label_encoder.fit_transform(y)
-        targets = set(y)
-        n_classes = len(targets)
-
-        for target in targets:
-            if target >= n_classes:
-                raise Exception(
-                    f'target {target} is larger than n_classes ({n_classes}). '
-                    'this is not supported by pytorch and will cause a very '
-                    'hard to debug error.'
-                )
-
         self.model = ClassificationModel(
             self.model_type,
             self.pretrained_model,
             num_labels=n_classes,
-            args=self.model_args,
+            args=model_args,
             use_cuda=self.use_cuda,
         )
         df = pd.DataFrame(dict(text=x, labels=y))
