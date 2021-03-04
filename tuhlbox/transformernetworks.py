@@ -33,6 +33,8 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             save_steps=-1,
             save_eval_checkpoints=False,
             save_model_every_epoch=False,
+            no_cache=False,
+            no_save=False,
             eval_all_checkpoints=True,
             use_tensorboard=False,
             overwrite_output_dir=False,
@@ -75,6 +77,8 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
         self.sliding_window = sliding_window
         self.save_eval_checkpoints = save_eval_checkpoints
         self.save_model_every_epoch = save_model_every_epoch
+        self.no_cache = no_cache
+        self.no_save = no_save
 
         self.model_args = {
             'model_type': self.model_type,
@@ -107,6 +111,8 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             'sliding_window': self.sliding_window,
             'save_eval_checkpoints': self.save_eval_checkpoints,
             'save_model_every_epoch': self.save_model_every_epoch,
+            'no_save': self.no_save,
+            'no_cache': self.no_cache,
         }
 
     def fit(self, x, y, *args, **kwargs):
