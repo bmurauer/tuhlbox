@@ -30,7 +30,9 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             max_grad_norm=1.0,
             logging_steps=0,
             evaluate_during_training=False,
-            save_steps=2000,
+            save_steps=-1,
+            save_eval_checkpoints=False,
+            save_model_every_epoch=False,
             eval_all_checkpoints=True,
             use_tensorboard=False,
             overwrite_output_dir=False,
@@ -40,6 +42,7 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
             n_gpu=1,
             silent=False,
             use_multiprocessing=True,
+            sliding_window=True,
     ):
         """Look at the documentation of simpletransformers for details."""
         self.model_type = model_type
@@ -69,35 +72,41 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
         self.use_cuda = use_cuda
         self.silent = silent
         self.use_multiprocessing = use_multiprocessing
+        self.sliding_window = sliding_window
+        self.save_eval_checkpoints = save_eval_checkpoints
+        self.save_model_every_epoch = save_model_every_epoch
 
         self.model_args = {
             'model_type': self.model_type,
             'pretrained_model': self.pretrained_model,
             'output_dir': self.output_dir,
             'cache_dir': self.cache_dir,
-            # 'fp16': self.fp16,
-            # 'fp16_opt_level': self.fp16_opt_level,
-            # 'max_seq_length': self.max_seq_length,
-            # 'train_batch_size': self.train_batch_size,
-            # 'eval_batch_size': self.eval_batch_size,
-            # 'gradient_accumulation_steps': self.gradient_accumulation_steps,
-            # 'num_train_epochs': self.num_train_epochs,
-            # 'weight_decay': self.weight_decay,
-            # 'learning_rate': self.learning_rate,
-            # 'adam_epsilon': self.adam_epsilon,
-            # 'warmup_ratio': self.warmup_ratio,
-            # 'warmup_steps': self.warmup_steps,
-            # 'max_grad_norm': self.max_grad_norm,
-            # 'logging_steps': self.logging_steps,
-            # 'evaluate_during_training': self.evaluate_during_training,
-            # 'save_steps': self.save_steps,
-            # 'eval_all_checkpoints': self.eval_all_checkpoints,
-            # 'use_tensorboard': self.use_tensorboard,
+            'fp16': self.fp16,
+            'fp16_opt_level': self.fp16_opt_level,
+            'max_seq_length': self.max_seq_length,
+            'train_batch_size': self.train_batch_size,
+            'eval_batch_size': self.eval_batch_size,
+            'gradient_accumulation_steps': self.gradient_accumulation_steps,
+            'num_train_epochs': self.num_train_epochs,
+            'weight_decay': self.weight_decay,
+            'learning_rate': self.learning_rate,
+            'adam_epsilon': self.adam_epsilon,
+            'warmup_ratio': self.warmup_ratio,
+            'warmup_steps': self.warmup_steps,
+            'max_grad_norm': self.max_grad_norm,
+            'logging_steps': self.logging_steps,
+            'evaluate_during_training': self.evaluate_during_training,
+            'save_steps': self.save_steps,
+            'eval_all_checkpoints': self.eval_all_checkpoints,
+            'use_tensorboard': self.use_tensorboard,
             'overwrite_output_dir': self.overwrite_output_dir,
-            # 'reprocess_input_data': self.reprocess_input_data,
-            # 'silent': self.silent,
-            # 'use_multiprocessing': self.use_multiprocessing,
+            'reprocess_input_data': self.reprocess_input_data,
+            'silent': self.silent,
+            'use_multiprocessing': self.use_multiprocessing,
             'dataloader_num_workers': 0,
+            'sliding_window': self.sliding_window,
+            'save_eval_checkpoints': self.save_eval_checkpoints,
+            'save_model_every_epoch': self.save_model_every_epoch,
         }
 
     def fit(self, x, y, *args, **kwargs):
