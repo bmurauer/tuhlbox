@@ -111,8 +111,9 @@ def reddit_to_common(input_directory):
 @click.option('-l', '--language-column-name', default=LANGUAGE_COLUMN)
 @click.option('-o', '--overwrite', default=False)
 @click.option('-out', '--output-column-name', default=FEATURE_STANZA)
+@click.option('--raw', is_flag=True)
 def parse_dependency(input_directory, text_column_name, language_column_name,
-                     overwrite, output_column_name):
+                     overwrite, output_column_name, raw):
     """
     Parse text files using the stanza parser.
 
@@ -128,6 +129,8 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
             the appropriate inputs.
         output_column_name: name of the output column in the meta-data file.
             defaults to 'stanza'.
+        raw: flag indicating that the content of the text_column_name
+            is not a filename but the raw text itself
 
     Returns: Nothing, this is a cli script.
 
@@ -145,7 +148,13 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
         name = os.path.splitext(os.path.basename(text_filename))[0] + '.pckl'
         return os.path.join(output_column_name, name)
 
-    df[output_column_name] = df[text_column_name].apply(get_filename)
+    if raw:
+        df[output_column_name] = [os.path.join(output_column_name,
+                                               f'{x.name}.pckl')
+                                  for x in df.iloc]
+    else:
+        df[output_column_name] = df[text_column_name].apply(get_filename)
+
     tuples = [(in_file, out_file, language)
               for (in_file, out_file, language)
               in zip(df[text_column_name],
@@ -164,8 +173,11 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
         if language not in parsers:
             parsers[language] = stanza.Pipeline(lang=language, use_gpu=False)
         parser = parsers[language]
-        with open(os.path.join(input_directory, in_file)) as in_fh:
-            parsed = parser(in_fh.read())
+        content = os.path.join(input_directory, in_file)
+        if not raw:
+            with open(content) as in_fh:
+                content = in_fh.read()
+        parsed = parser(content)
         with open(os.path.join(input_directory, out_file), 'wb') as out_fh:
             pickle.dump(parsed, out_fh)
     logger.info('writing %s', main_dataset_file)
