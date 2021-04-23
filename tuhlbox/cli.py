@@ -154,7 +154,8 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
             return True
         if os.path.isfile(f):
             return os.path.getsize(f) == 0
-        return False
+        else:
+            return True
 
     tuples = [
         (in_file, out_file, language)
