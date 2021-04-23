@@ -7,10 +7,8 @@ import pickle
 import shutil
 import sys
 import warnings
-from collections import defaultdict
 from copy import deepcopy
 from glob import glob
-from tempfile import NamedTemporaryFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
 
@@ -173,7 +171,6 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
         return
 
     parsers = {}
-    errors = defaultdict(list)
     for in_file, out_file, language in tqdm(tuples):
         if language.endswith('_to_en'):
             language = 'en'
@@ -189,17 +186,11 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
             except RuntimeError as e:
                 logger.error('error on parsing', full_path)
                 logger.error(content)
-                errors[full_path].append((e, content))
-                continue
+                raise e
             with open(os.path.join(input_directory, out_file), 'wb') as out_fh:
                 pickle.dump(parsed, out_fh)
     logger.info('writing %s', main_dataset_file)
     df.to_csv(main_dataset_file, index=False)
-    if errors:
-        with NamedTemporaryFile(mode='w', delete=False) as o_f:
-            json.dump(dict(errors), o_f)
-            logger.info(f'{len(errors)} errors during parsing, written to '
-                        f'{o_f.name}')
 
 
 @click.command(help='reads dataset.csv, produces constituencies directory')
