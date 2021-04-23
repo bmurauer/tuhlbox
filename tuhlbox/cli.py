@@ -10,6 +10,7 @@ import warnings
 from collections import defaultdict
 from copy import deepcopy
 from glob import glob
+from tempfile import NamedTemporaryFile
 from urllib.error import HTTPError
 from urllib.request import urlretrieve
 
@@ -147,7 +148,7 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
             output_column_name,
             os.path.splitext(os.path.basename(f))[0] + '.pckl'
         )
-        for f in text_column_name
+        for f in df[text_column_name]
     ]
 
     def should_write(f):
@@ -194,6 +195,11 @@ def parse_dependency(input_directory, text_column_name, language_column_name,
                 pickle.dump(parsed, out_fh)
     logger.info('writing %s', main_dataset_file)
     df.to_csv(main_dataset_file, index=False)
+    if errors:
+        with NamedTemporaryFile(mode='w', delete=False) as o_f:
+            json.dump(dict(errors), o_f)
+            logger.info(f'{len(errors)} errors during parsing, written to '
+                        f'{o_f.name}')
 
 
 @click.command(help='reads dataset.csv, produces constituencies directory')
