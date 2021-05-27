@@ -1,4 +1,0 @@
-[flake8]
-ignore = W504,W503
-exclude = .git docs
-import_order_style = google

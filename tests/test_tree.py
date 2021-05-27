@@ -2,18 +2,14 @@
 import unittest
 
 import nltk
-
-from tuhlbox.tree import (
-    StringToTreeTransformer,
-    TreeChainTransformer,
-    WordToPosTransformer,
-)
+from tuhlbox.tree import (StringToTreeTransformer, TreeChainTransformer,
+                          WordToPosTransformer)
 
 
 class TestTrees(unittest.TestCase):
     """Tests tree-based models."""
 
-    def test_tree_parsing(self):
+    def test_tree_parsing(self) -> None:
         """Test if strings are parsed correctly."""
         transformer = StringToTreeTransformer()
         # one document could contain many sentences, and each sentence is a
@@ -23,7 +19,7 @@ class TestTrees(unittest.TestCase):
         actual = transformer.transform(documents)
         self.assertEqual(actual, expected)
 
-    def test_pos_extraction(self):
+    def test_pos_extraction(self) -> None:
         """Test if POS tags are extracted correctly."""
         transformer = WordToPosTransformer()
         documents = [
@@ -32,7 +28,7 @@ class TestTrees(unittest.TestCase):
         actual = transformer.transform(documents)
         self.assertEqual(actual, expected)
 
-    def test_pos_short_chains(self):
+    def test_pos_short_chains(self) -> None:
         """Test if short chains are extracted correctly with single joining."""
         transformer = TreeChainTransformer(max_length=2,
                                            combine_chain_elements=' ')
@@ -71,7 +67,7 @@ class TestTrees(unittest.TestCase):
         actual = list(transformer.transform(documents))
         self.assertEqual(actual, expected)
 
-    def test_pos_short_chains_nocombine(self):
+    def test_pos_short_chains_nocombine(self) -> None:
         """Test if short chains are extracted correctly without joining."""
         transformer = TreeChainTransformer(max_length=2,
                                            combine_chain_elements=None)
@@ -118,7 +114,7 @@ class TestTrees(unittest.TestCase):
         actual = list(transformer.transform(documents))
         self.assertEqual(actual, expected)
 
-    def test_pos_long_chains(self):
+    def test_pos_long_chains(self) -> None:
         """Test if long chains are extracted correctly."""
         transformer = TreeChainTransformer(max_length=None,
                                            combine_chain_elements=' ')
@@ -152,7 +148,7 @@ class TestTrees(unittest.TestCase):
         actual = list(transformer.transform(documents))
         self.assertEqual(actual, expected)
 
-    def test_pos_short_chains_combine_chains(self):
+    def test_pos_short_chains_combine_chains(self) -> None:
         """Test if short chains are extracted correctly with double joining."""
         transformer = TreeChainTransformer(
             max_length=None,
@@ -184,10 +180,10 @@ class TestTrees(unittest.TestCase):
         actual = list(transformer.transform(documents))
         self.assertEqual(actual, expected)
 
-    def test_pos_short_chains_combine_all(self):
+    def test_pos_short_chains_combine_all(self) -> None:
         """Test if short chains are extracted correctly with triple joining."""
         transformer = TreeChainTransformer(
-            max_length=None,
+            max_length=0,
             combine_chain_elements=' ',
             combine_chains='@',
             combine_strings='#',
@@ -211,12 +207,12 @@ class TestTrees(unittest.TestCase):
         actual = list(transformer.transform(documents))
         self.assertEqual(actual, expected)
 
-    def test_combine_chains_error(self):
+    def test_combine_chains_error(self) -> None:
         """Test if illegal parameters cause Error with joining."""
         kwargs = {'combine_chain_elements': None, 'combine_chains': '#'}
         self.assertRaises(ValueError, TreeChainTransformer, **kwargs)
 
-    def test_combine_strings_error_1(self):
+    def test_combine_strings_error_1(self) -> None:
         """Test if illegal parameters cause Error with joining."""
         kwargs = {
             'combine_chain_elements': ' ',
@@ -225,7 +221,7 @@ class TestTrees(unittest.TestCase):
         }
         self.assertRaises(ValueError, TreeChainTransformer, **kwargs)
 
-    def test_combine_strings_error_2(self):
+    def test_combine_strings_error_2(self) -> None:
         """Test if illegal parameters cause Error with joining."""
         kwargs = {
             'combine_chain_elements': None,

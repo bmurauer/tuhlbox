@@ -1,4 +1,8 @@
 """Transformers working on NLTK tree objects."""
+from __future__ import annotations
+
+from typing import Any, Iterable, List, Union
+
 import nltk
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -12,20 +16,20 @@ class StringToTreeTransformer(BaseEstimator, TransformerMixin):
     output: list of list of nltk.Tree objects
     """
 
-    def fit(self, x, y=None):
+    def fit(self, _x: Any, _y: Any = None) -> StringToTreeTransformer:
         """Fit the model."""
         return self
 
-    def transform(self, x, y=None):
+    def transform(self, x: List[List[str]], _y: Any = None) -> List[List[nltk.Tree]]:
         """Transform the data."""
         result = []
         for document in x:
             ret = []
             if isinstance(document, str):
                 raise Exception(
-                    'this transformer only takes document which '
-                    'are already split into sentences. Please use a sentence '
-                    'splitter before (e.g., by using stanfordnlp)'
+                    "this transformer only takes document which "
+                    "are already split into sentences. Please use a sentence "
+                    "splitter before (e.g., by using stanfordnlp)"
                 )
             for line in document:
                 if line and line.strip():
@@ -43,11 +47,11 @@ class WordToPosTransformer(BaseEstimator, TransformerMixin):
     output: list of list of strings
     """
 
-    def fit(self, x, y=None):
+    def fit(self, _x: Any, _y: Any = None) -> WordToPosTransformer:
         """Fit the model."""
         return self
 
-    def transform(self, x, y=None):
+    def transform(self, x: List[List[nltk.Tree]], _y: Any = None) -> List[List[str]]:
         """Transform the data."""
         ret = []
         for document in x:
@@ -79,11 +83,11 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
     """
 
     def __init__(
-            self,
-            max_length=None,
-            combine_chain_elements=None,
-            combine_chains=None,
-            combine_strings=None,
+        self,
+        max_length: int = None,
+        combine_chain_elements: str = None,
+        combine_chains: str = None,
+        combine_strings: str = None,
     ):
         """
         Initialize class.
@@ -110,13 +114,12 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         """
         if combine_strings is not None and combine_chains is None:
             raise ValueError(
-                'if combine_strings is set, both combine_chains and '
-                'combine_chain_elementsmust be set too.'
+                "if combine_strings is set, both combine_chains and "
+                "combine_chain_elementsmust be set too."
             )
         if combine_chains is not None and combine_chain_elements is None:
             raise ValueError(
-                'if combine_chains is set, combine_chain_elements must be set '
-                'too.'
+                "if combine_chains is set, combine_chain_elements must be set " "too."
             )
 
         self.max_length = max_length
@@ -124,12 +127,12 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         self.combine_chains = combine_chains
         self.combine_strings = combine_strings
 
-    def fit(self, x, y=None):
+    def fit(self, _x: Any, _y: Any = None) -> TreeChainTransformer:
         """Fit the model."""
         return self
 
     # please be careful, it is dangerous in here!
-    def _find_chains(self, tree, prev_labels):
+    def _find_chains(self, tree: nltk.Tree, prev_labels: List[str]) -> List[List[str]]:
         ret_full = []
         if isinstance(tree, str) or len(tree) == 0:
             # the leaf nodes of nltk trees are strings
@@ -148,22 +151,22 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
             ret_full += self._find_chains(child, prev_labels[:])
         return ret_full
 
-    def transform(self, x, y=None):
+    def transform(
+        self, documents: List[List[nltk.Tree]], _y: Any = None
+    ) -> Union[List[str], List[List[str]]]:
         """Transform the data."""
         result = []
-        for document in x:
+        for document in documents:
             #  a document consists of a list of nltk.Tree objects
             #  one tree represents one sentence.
-            new_document = []
+            new_document: Any = []
             for tree in document:
                 #  every tree is split into a list of chains, whereas
                 #  every chain is a list of symbols.
-                chains = self._find_chains(tree, [])
+                chains: Any = self._find_chains(tree, [])
 
                 if self.combine_chain_elements is not None:
-                    chains = [self.combine_chain_elements.join(x) for x in
-                              chains]
-
+                    chains = [self.combine_chain_elements.join(x) for x in chains]
                 if self.combine_chains is not None:
                     new_document.append(self.combine_chains.join(chains))
                 else:
@@ -175,12 +178,12 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         return result
 
 
-def _get_average_height(document):
+def _get_average_height(document: List[nltk.Tree]) -> np.array:
     """Calculate the average height of all trees in a document."""
     return np.average([tree.height() for tree in document])
 
 
-def _calculate_average_children(tree):
+def _calculate_average_children(tree: nltk.Tree) -> List[int]:
     result = []
     if type(tree) != nltk.tree.Tree or not tree:
         result.append(0)
@@ -191,14 +194,14 @@ def _calculate_average_children(tree):
     return result
 
 
-def _get_average_children(document):
+def _get_average_children(document: List[nltk.Tree]) -> np.array:
     result = []
     for tree in document:
         result += _calculate_average_children(tree)
     return np.average(result)
 
 
-def _get_average_inner_to_leaf_ratio(document):
+def _get_average_inner_to_leaf_ratio(document: List[nltk.Tree]) -> np.array:
     result = []
     for tree in document:
         num_leaves = len(tree.leaves())
@@ -207,16 +210,15 @@ def _get_average_inner_to_leaf_ratio(document):
     return np.average(result)
 
 
-def _get_max_tree_width(tree):
+def _get_max_tree_width(tree: nltk.Tree) -> int:
     maximum = 0
     if type(tree) == nltk.tree.Tree:
         for child in tree:
-            maximum = max(maximum, _get_max_tree_width(child),
-                          len(tree))
+            maximum = max(maximum, _get_max_tree_width(child), len(tree))
     return maximum
 
 
-def _get_max_child_width(document):
+def _get_max_child_width(document: List[nltk.Tree]) -> np.array:
     result = []
     for tree in document:
         result.append(_get_max_tree_width(tree))
@@ -234,11 +236,11 @@ class TreeStatsVectorizer(TransformerMixin, BaseEstimator):
     output: list of list of numbers/floats
     """
 
-    def fit(self, x, y=None):
+    def fit(self, _x: Any, _y: Any = None) -> TreeStatsVectorizer:
         """Fit the model."""
         return self
 
-    def transform(self, x, y=None):
+    def transform(self, x: List[List[nltk.Tree]], _y: Any = None) -> List[List[float]]:
         """Transform the data."""
         result = []
         for document in x:
@@ -261,11 +263,11 @@ class TreeToStringTransformer(BaseEstimator, TransformerMixin):
     output: list of list of strings
     """
 
-    def fit(self, x, y=None):
+    def fit(self, _x: Any, _y: Any = None) -> TreeToStringTransformer:
         """Fit the model."""
         return self
 
-    def transform(self, x, y=None):
+    def transform(self, x: List[List[nltk.Tree]], _y: Any = None) -> List[List[str]]:
         """Transform the data."""
         ret = []
         for document in x:
@@ -285,20 +287,20 @@ class TreeToFlatStringTransformer(TransformerMixin, BaseEstimator):
     Output: Every document is a single string.
     """
 
-    def fit(self, X, y=None, **fit_args):
+    def fit(self, _x: Any, _y: Any = None) -> TreeToFlatStringTransformer:
         """Fit the model."""
         return self
 
-    def parse(self, document):
+    def parse(self, tree: nltk.Tree) -> str:
         """Convert a string to a NLTK tree."""
-        result = [document.label()]
-        result += [self.parse(child) for child in document]
-        return ' '.join(result)
+        result = [tree.label()]
+        result += [self.parse(child) for child in tree]
+        return " ".join(result)
 
-    def transform(self, X):
+    def transform(self, documents: List[List[nltk.Tree]]) -> List[str]:
         """Transform the data."""
         result = []
-        for document in X:
+        for document in documents:
             parses = [self.parse(sentence) for sentence in document]
-            result.append('. '.join(parses))
+            result.append(". ".join(parses))
         return result

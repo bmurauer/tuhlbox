@@ -2,7 +2,7 @@
 from tuhlbox.subfreq import SubFrequencyVectorizer
 
 
-def test_subset_vectorizer():
+def test_subset_vectorizer() -> None:
     """Test if the transformer produces correct output shapes."""
     transformer = SubFrequencyVectorizer()
 

@@ -1,6 +1,9 @@
 """Transformers calculating string kernels."""
+from __future__ import annotations
+
 import logging
 from collections import defaultdict
+from typing import Any, Dict, List, Tuple
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -8,7 +11,9 @@ from sklearn.base import BaseEstimator, TransformerMixin
 logger = logging.getLogger(__name__)
 
 
-def presence_kernel(x, y, ngram_min, ngram_max):
+def presence_kernel(
+    x: np.array, y: np.array, ngram_min: int, ngram_max: int
+) -> np.array:
     """Calculate the presence kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
@@ -17,7 +22,7 @@ def presence_kernel(x, y, ngram_min, ngram_max):
         ngrams1 = set()
         for ngram_size in range(ngram_min, ngram_max + 1):
             for index in range(len(string) - ngram_size + 1):
-                ngram = string[index: index + ngram_size]
+                ngram = string[index : index + ngram_size]
                 if type(ngram) != str:
                     ngram = str(ngram)
                 ngrams1.add(ngram)
@@ -27,7 +32,7 @@ def presence_kernel(x, y, ngram_min, ngram_max):
             ngrams2 = set()
             for ngram_size in range(ngram_min, ngram_max + 1):
                 for index in range(len(counterstring) - ngram_size + 1):
-                    ngram = counterstring[index: index + ngram_size]
+                    ngram = counterstring[index : index + ngram_size]
                     if type(ngram) != str:
                         ngram = str(ngram)
                     ngrams2.add(ngram)
@@ -35,16 +40,18 @@ def presence_kernel(x, y, ngram_min, ngram_max):
     return result
 
 
-def spectrum_kernel(x, y, ngram_min, ngram_max):
+def spectrum_kernel(
+    x: np.array, y: np.array, ngram_min: int, ngram_max: int
+) -> np.array:
     """Calculate the spectrum kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
         if type(string) == str:
             string = string.lower()
-        ngrams = defaultdict(int)
+        ngrams: Dict[str, int] = defaultdict(int)
         for ngram_size in range(ngram_min, ngram_max + 1):
             for index in range(len(string) - ngram_size + 1):
-                ngram = string[index: index + ngram_size]
+                ngram = string[index : index + ngram_size]
                 if type(ngram) != str:
                     ngram = str(ngram)
                 ngrams[ngram] += 1
@@ -53,23 +60,25 @@ def spectrum_kernel(x, y, ngram_min, ngram_max):
                 counterstring = counterstring.lower()
             for ngram_size in range(ngram_min, ngram_max + 1):
                 for index in range(len(counterstring) - ngram_size + 1):
-                    ngram = counterstring[index: index + ngram_size]
+                    ngram = counterstring[index : index + ngram_size]
                     if type(ngram) != str:
                         ngram = str(ngram)
                     result[i, j] += ngrams[ngram]
     return result
 
 
-def intersection_kernel(x, y, ngram_min, ngram_max):
+def intersection_kernel(
+    x: np.array, y: np.array, ngram_min: int, ngram_max: int
+) -> np.array:
     """Calculate the intersection kernel, Ionescu & Popescu 2017."""
     result = np.zeros((len(x), len(y)), dtype=int)
     for i, string in enumerate(x):
         if type(string) == str:
             string = string.lower()
-        ngrams = defaultdict(int)
+        ngrams: Dict[str, int] = defaultdict(int)
         for ngram_size in range(ngram_min, ngram_max + 1):
             for index in range(len(string) - ngram_size + 1):
-                ngram = string[index: index + ngram_size]
+                ngram = string[index : index + ngram_size]
                 if type(ngram) != str:
                     ngram = str(ngram)
                 ngrams[ngram] += 1
@@ -79,7 +88,7 @@ def intersection_kernel(x, y, ngram_min, ngram_max):
             ngrams2 = dict(ngrams)
             for ngram_size in range(ngram_min, ngram_max + 1):
                 for index in range(len(counterstring) - ngram_size + 1):
-                    ngram = counterstring[index: index + ngram_size]
+                    ngram = counterstring[index : index + ngram_size]
                     if type(ngram) != str:
                         ngram = str(ngram)
                     if ngram in ngrams2 and ngrams2[ngram] > 0:
@@ -89,9 +98,9 @@ def intersection_kernel(x, y, ngram_min, ngram_max):
 
 
 kernel_map = {
-    'presence': presence_kernel,
-    'spectrum': spectrum_kernel,
-    'intersection': intersection_kernel,
+    "presence": presence_kernel,
+    "spectrum": spectrum_kernel,
+    "intersection": intersection_kernel,
 }
 
 
@@ -104,8 +113,12 @@ class StringKernelTransformer(BaseEstimator, TransformerMixin):
     Output: m x n matrix containing the kernel similarities between the strings
     """
 
-    def __init__(self, kernel_type='intersection', ngram_range=None,
-                 normalize=True):
+    def __init__(
+            self,
+            kernel_type: str = "intersection",
+            ngram_range: Tuple[int, int] = None,
+            normalize: bool = True
+    ):
         """
         Initialize the model.
 
@@ -120,21 +133,21 @@ class StringKernelTransformer(BaseEstimator, TransformerMixin):
         self.normalize = normalize
         self.kernel_type = kernel_type
         if kernel_type not in kernel_map:
-            raise ValueError(f'unknown kernel: {kernel_type}')
+            raise ValueError(f"unknown kernel: {kernel_type}")
         self._kernel = kernel_map[kernel_type]
         self._train_data = None
-        self._train_kernel = None
+        self._train_kernel: np.array = None
 
-    def fit(self, X, y=None):
+    def fit(self, X: List[str], _y: Any = None) -> StringKernelTransformer:
         """Fit model."""
         self._train_data = np.array(X)
         self._train_kernel = self._kernel(X, X, *self.ngram_range)
         for i in range(len(X)):
             if self._train_kernel[i, i] == 0:
-                logger.error(f'zeros in diagonal at ({i},{i}) for {X[i]}')
+                logger.error(f"zeros in diagonal at ({i},{i}) for {X[i]}")
         return self
 
-    def transform(self, X, y=None):
+    def transform(self, X: List[str], _y: Any = None) -> np.array:
         """Transform data."""
         X = np.array(X)
         _st = self._kernel(X, self._train_data, *self.ngram_range)
@@ -148,7 +161,7 @@ class StringKernelTransformer(BaseEstimator, TransformerMixin):
         result = np.copy(_st)
         for i in range(_st.shape[0]):
             if _tt[i, i] == 0:
-                logger.error(f'zeros in diagonal at ({i},{i}) for {X[i]}')
+                logger.error(f"zeros in diagonal at ({i},{i}) for {X[i]}")
             for j in range(_st.shape[1]):
                 if _tt[i, i] != 0 and _ss[j, j] != 0:
                     result[i, j] /= np.sqrt(_tt[i, i] * _ss[j, j])

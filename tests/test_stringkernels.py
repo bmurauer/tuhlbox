@@ -1,12 +1,8 @@
 """Test String-Kernel based models."""
 import numpy as np
 from numpy.testing import assert_array_equal
-
-from tuhlbox.stringkernels import (
-    intersection_kernel,
-    presence_kernel,
-    spectrum_kernel,
-)
+from tuhlbox.stringkernels import (intersection_kernel, presence_kernel,
+                                   spectrum_kernel)
 
 docs = [
     'I like this old movie. The movie is very nice.',
@@ -19,7 +15,7 @@ docs = [
 ngram_min, ngram_max = 1, 4
 
 
-def test_intersection_kernel():
+def test_intersection_kernel() -> None:
     """Test intersection kernel by comparing with original code."""
     # obtained from:
     # java ComputeStringKernel intersection 1 4 sentences.txt <outfile>
@@ -32,7 +28,7 @@ def test_intersection_kernel():
                        intersection_kernel(docs, docs, ngram_min, ngram_max))
 
 
-def test_presence_kernel():
+def test_presence_kernel() -> None:
     """Test presence kernel by comparing with original code."""
     # obtained from:
     # java ComputeStringKernel presence 1 4 sentences.txt <outfile>
@@ -46,7 +42,7 @@ def test_presence_kernel():
                        presence_kernel(docs, docs, ngram_min, ngram_max))
 
 
-def test_spectrum_kernel():
+def test_spectrum_kernel() -> None:
     """Test spectrum kernel by comparing with original code."""
     # obtained from:
     # java ComputeStringKernel spectrum 1 4 sentences.txt <outfile>

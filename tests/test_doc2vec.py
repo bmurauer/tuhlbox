@@ -1,10 +1,9 @@
 """Test Doc2Vec Models."""
 from nltk import word_tokenize
-
 from tuhlbox.doc2vec import Doc2VecTransformer
 
 
-def test_transformation():
+def test_transformation() -> None:
     """Expect a correct vector size."""
     documents = [
         word_tokenize('This is an example sentence.'),

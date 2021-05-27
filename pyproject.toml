@@ -6,7 +6,7 @@ description = "Personal toolbox of language processing models."
 authors = ["Benjamin Murauer <b.murauer@posteo.de>"]
 
 [tool.poetry.dependencies]
-python = ">=3.6.1,<4"
+python = "^3.7.0"
 sklearn = "^0.0"
 treegrams = "^0.1.0"
 gensim = "^3.8.3"
@@ -14,15 +14,16 @@ dstoolbox = "^0.10.1"
 torch = "^1.7.0"
 stanza = "^1.1.1"
 simpletransformers = "^0.51.1"
-tensorflow-gpu = "^2.3.1"
 click = "^7.1.2"
+skorch = "^0.10.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
-flake8 = "^3.8.4"
 isort = "^5.6.4"
 pre-commit = "^2.9.3"
-flake8-docstrings = "^1.5.0"
+black = {version = "^21.5b1", allow-prereleases = true}
+mypy = "^0.812"
+pandas-stubs = "^1.1.0"
 
 [tool.poetry.scripts]
 reddit_to_common = "tuhlbox.cli:reddit_to_common"
