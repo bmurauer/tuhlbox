@@ -10,7 +10,7 @@ class CharCNN(nn.Module):
         self,
         vocab_size: int,
         embedding_dim: int,
-        num_classes: int,
+        n_classes: int,
         max_seq_length: int,
         dropout: float = 0.0,
     ):
@@ -29,7 +29,7 @@ class CharCNN(nn.Module):
         self.vocab_size = vocab_size
         self.dropout = dropout
         self.max_seq_length = max_seq_length
-        self.num_classes = num_classes
+        self.num_classes = n_classes
 
         # Embedding Input dimensions (x, y):
         # x: batch size
@@ -54,8 +54,8 @@ class CharCNN(nn.Module):
             nn.Conv1d(
                 in_channels=self.embedding_dim,
                 out_channels=50,
-                kernel_size=7,
-                stride=1,
+                kernel_size=(7,),
+                stride=(1,),
             ),
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=3, stride=3),
@@ -65,8 +65,8 @@ class CharCNN(nn.Module):
             nn.Conv1d(
                 in_channels=50,
                 out_channels=50,
-                kernel_size=5,
-                stride=1,
+                kernel_size=(5,),
+                stride=(1,),
             ),
             nn.ReLU(),
             nn.MaxPool1d(kernel_size=3, stride=3),

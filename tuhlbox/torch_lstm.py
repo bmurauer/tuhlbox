@@ -8,6 +8,7 @@ from torch import nn
 class RNNClassifier(nn.Module):
     def __init__(
         self,
+        n_classes: int,
         embedding_dim: int = 128,
         rec_layer_type: str = "lstm",
         num_units: int = 128,
@@ -21,6 +22,7 @@ class RNNClassifier(nn.Module):
         self.num_units = num_units
         self.num_layers = num_layers
         self.dropout = dropout
+        self.n_classes = n_classes
 
         self.emb = nn.Embedding(vocab_size + 1, embedding_dim=self.embedding_dim)
 
@@ -34,7 +36,7 @@ class RNNClassifier(nn.Module):
             batch_first=True,
         )
 
-        self.output = nn.Linear(self.num_units, 2)
+        self.output = nn.Linear(self.num_units, self.n_classes)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         embeddings = self.emb(x)
