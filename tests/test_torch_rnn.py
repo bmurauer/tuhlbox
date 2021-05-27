@@ -4,7 +4,7 @@ import torch
 from dstoolbox.transformers import Padder2d, TextFeaturizer
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.pipeline import make_pipeline
-from tuhlbox.skorch_wrapper import TorchClassifier
+from tuhlbox.torch_classifier import TorchClassifier
 from tuhlbox.torch_lstm import RNNClassifier
 
 x, y = fetch_20newsgroups(return_X_y=True)
