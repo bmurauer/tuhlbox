@@ -22,6 +22,7 @@ class TorchClassifier(ClassifierMixin, BaseEstimator):
     def __init__(
         self,
         module: Type[nn.Module],
+        max_seq_len: int = None,
         batch_size: int = 64,
         max_epochs: int = 5,
         learn_rate: float = 1e-3,
@@ -38,12 +39,15 @@ class TorchClassifier(ClassifierMixin, BaseEstimator):
         self.wrapped_model: Optional[NeuralNetClassifier] = None
         self.optimizer = optimizer
         self.label_encoder: LabelEncoder = LabelEncoder()
+        self.max_seq_len = max_seq_len
 
     def fit(self, x: Any, y: Iterable[Any], **fit_kwargs: Any) -> TorchClassifier:
         if self.wrapped_model is None:
             classes = set(y)
             n_classes = len(classes)
             self.model_kwargs["module__n_classes"] = n_classes
+            if self.max_seq_len is not None:
+                self.model_kwargs["module__max_seq_len"] = self.max_seq_len
             self.wrapped_model = NeuralNetClassifier(
                 module=self.module,
                 device=self.device,
