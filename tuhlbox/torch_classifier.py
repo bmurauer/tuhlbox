@@ -46,8 +46,6 @@ class TorchClassifier(ClassifierMixin, BaseEstimator):
             classes = set(y)
             n_classes = len(classes)
             self.model_kwargs["module__n_classes"] = n_classes
-            if self.max_seq_len is not None:
-                self.model_kwargs["module__max_seq_len"] = self.max_seq_len
             self.wrapped_model = NeuralNetClassifier(
                 module=self.module,
                 device=self.device,

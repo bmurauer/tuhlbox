@@ -50,5 +50,6 @@ class RNNClassifier(nn.Module):
         drop_out = nn.Dropout(p=self.dropout)(rec_out)
         # Remember that the final non-linearity should be softmax, so
         # that our predict_proba method outputs actual probabilities!
-        out = nn.Softmax(dim=-1)(drop_out)
+        linear_out = self.output(drop_out)
+        out = nn.Softmax(dim=-1)(linear_out)
         return out
