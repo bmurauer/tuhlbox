@@ -6,9 +6,8 @@ from sklearn.datasets import fetch_20newsgroups
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
-from torch import nn
 from tuhlbox.torch_classifier import TorchClassifier
-from tuhlbox.torch_cnn import CharCNN, ConvLayerConfig, FcLayerConfig
+from tuhlbox.torch_cnn import CharCNN
 from tuhlbox.torch_lstm import RNNClassifier
 
 x, y = fetch_20newsgroups(return_X_y=True)
@@ -26,23 +25,15 @@ def test_cnn() -> None:
         Padder2d(pad_value=VOCAB_SIZE, max_len=MAX_SEQ_LEN, dtype=int),
         TorchClassifier(
             module=CharCNN,
-            device="cpu",
+            device="cuda",
             batch_size=54,
             max_epochs=5,
             learn_rate=0.01,
             optimizer=torch.optim.Adam,
             model_kwargs=dict(
                 module__max_seq_len=MAX_SEQ_LEN,
-                module__emb_layer=nn.Embedding(VOCAB_SIZE + 1, EMB_DIM),
-                module__conv_layer_configs=[
-                    ConvLayerConfig(EMB_DIM, 50, 7, 1, 3, 3),
-                    ConvLayerConfig(50, 50, 5, 1, 3, 3),
-                ],
-                module__fc_layer_configs=[
-                    FcLayerConfig(None, 256),  # will be calculated automagically
-                    FcLayerConfig(256, 128),
-                    FcLayerConfig(128, 64),
-                ],
+                module__embedding_dim=EMB_DIM,
+                module__num_features=VOCAB_SIZE,
             ),
         ),
     )

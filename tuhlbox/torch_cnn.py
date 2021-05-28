@@ -1,64 +1,13 @@
 """Basic CNN model."""
 import math
-from collections import namedtuple
 from typing import List, Tuple
 
 import torch
 import torch.nn as nn
 
-ConvLayerConfig = namedtuple(
-    "ConvLayerConfig",
-    [
-        "in_channels",
-        "out_channels",
-        "conv_kernel_size",
-        "conv_stride",
-        "max_kernel_size",
-        "max_stride",
-    ],
-)
-
-FcLayerConfig = namedtuple("FcLayerConfig", ["in_features", "out_features"])
-
-
-def create_conv_layers(configs: List[ConvLayerConfig]) -> List[nn.Sequential]:
-    result = []
-    for config in configs:
-        result.append(
-            nn.Sequential(
-                nn.Conv1d(
-                    in_channels=config.in_channels,
-                    out_channels=config.out_channels,
-                    kernel_size=(config.conv_kernel_size,),
-                    stride=(config.conv_stride,),
-                ),
-                nn.ReLU(),
-                nn.MaxPool1d(
-                    kernel_size=(config.max_kernel_size,),
-                    stride=(config.max_stride,),
-                ),
-            ),
-        )
-    return result
-
-
-def create_fc_layers(
-    fc_configs: List[FcLayerConfig], conv_configs: List[ConvLayerConfig], start_n: int
-) -> List[nn.Sequential]:
-    result = []
-    start_n = compute_first_fc_layer_input_size(conv_configs, start_n)
-    for i, config in enumerate(fc_configs):
-        in_features = start_n if i == 0 else config.in_features
-        result.append(
-            nn.Sequential(
-                nn.Linear(in_features=in_features, out_features=config.out_features)
-            )
-        )
-    return result
-
 
 def compute_first_fc_layer_input_size(
-    conv_configs: List[ConvLayerConfig], n: int
+    conv_configs: List[Tuple[int, int]], n: int
 ) -> int:
     """
     Calculates the input dimension of the first fully connected layer.
@@ -66,7 +15,8 @@ def compute_first_fc_layer_input_size(
     See https://datascience.stackexchange.com/a/40991/9281
 
     Args:
-        conv_configs: Configurations of the convolution layers
+        conv_configs: Configurations of the convolution or max-pool layer, each a tuple
+            with (kernel_size, stride) values.
         n: starting value (max sequence length)
 
     Returns:
@@ -77,11 +27,9 @@ def compute_first_fc_layer_input_size(
         return math.floor(((in_size - kernel) / stride) + 1)
 
     for config in conv_configs:
-        n = get_output_dim(n, config.conv_kernel_size, config.conv_stride)
-        n = get_output_dim(n, config.max_kernel_size, config.max_stride)
+        n = get_output_dim(n, config[0], config[1])
 
-    last_conv_out_channels = conv_configs[-1].out_channels
-    return n * last_conv_out_channels
+    return n
 
 
 class CharCNN(nn.Module):
@@ -91,61 +39,47 @@ class CharCNN(nn.Module):
         self,
         n_classes: int,
         max_seq_len: int,
-        emb_layer: nn.Embedding,
-        conv_layer_configs: List[ConvLayerConfig],
-        fc_layer_configs: List[FcLayerConfig],
+        embedding_dim: int = 300,
+        num_features: int = 10_000,
     ):
         super().__init__()
-        self.emb_layer = emb_layer
-        self.conv_layers = create_conv_layers(conv_layer_configs)
-        self.fc_layers = create_fc_layers(
-            fc_layer_configs, conv_layer_configs, max_seq_len
+        self.emb_layer = nn.Embedding(num_features + 1, embedding_dim)
+        self.conv_layers = nn.Sequential(
+            nn.Conv1d(embedding_dim, 50, (7,), (1,)),
+            nn.ReLU(),
+            nn.MaxPool1d(3, 3),
+            nn.Conv1d(50, 50, (5,), (1,)),
+            nn.ReLU(),
+            nn.MaxPool1d(3, 3),
         )
-        self.last_layer = nn.Sequential(
-            nn.Linear(fc_layer_configs[-1].out_features, n_classes),
-            nn.LogSoftmax(dim=1),
+        self.fc_layers = nn.Sequential(
+            nn.Linear(450, 200),
+            nn.ReLU(),
+            nn.Dropout(0.1),
+            nn.Linear(200, n_classes),
+            nn.Softmax(),
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        # the embedding layer returns the values in a different order than is required
-        # by the convolution layers, so we have to swap them
-        x = self.emb_layer(x).permute(0, 2, 1)
+
+        x = self.emb_layer(x)
+
+        # the embedding layer returns the values in format:
+        #
+        #    (batch_size, sequence_length, embedding_dimension)
+        #
+        # but the convolution layers expect
+        #
+        #    (batch_size, num_filters, sequence_length)
+        #
+        # in order to convolute correctly on the last dimension.
+        # this operation swaps the last two elements:
+        x = x.permute(0, 2, 1)
+
         for conv in self.conv_layers:
             x = conv(x)
         # flatten all values
         x = x.view(x.size(0), -1)
         for fc in self.fc_layers:
             x = fc(x)
-        return self.last_layer(x)
-
-    @staticmethod
-    def conv_layer(
-        in_channels: int,
-        out_channels: int,
-        conv_kernel: int,
-        conv_stride: int = 1,
-        max_kernel: int = 3,
-        max_stride: int = 3,
-    ) -> nn.Module:
-        return nn.Sequential(
-            nn.Conv1d(
-                in_channels=in_channels,
-                out_channels=out_channels,
-                kernel_size=(conv_kernel,),
-                stride=(conv_stride,),
-            ),
-            nn.ReLU(),
-            nn.MaxPool1d(max_kernel, max_stride),
-        )
-
-    @staticmethod
-    def fc_layer(
-        in_size: int,
-        out_size: int,
-        dropout: float = 0.0,
-    ) -> nn.Module:
-        return nn.Sequential(
-            nn.Linear(in_features=in_size, out_features=out_size),
-            nn.ReLU(),
-            nn.Dropout(p=dropout),
-        )
+        return x
