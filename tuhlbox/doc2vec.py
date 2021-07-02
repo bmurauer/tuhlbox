@@ -23,7 +23,7 @@ def _sanity_check(documents: List[List[str]]) -> None:
     if len(documents) < 1:
         raise ValueError("empty document set provided")
 
-    if type(documents[0]) == str or not isinstance(documents[1], Iterable):
+    if type(documents[0]) == str or not isinstance(documents[0], Iterable):
         raise TypeError("this transformer only works on pre-split data.")
 
 
