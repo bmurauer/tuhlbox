@@ -1,12 +1,15 @@
+from time import perf_counter
 from typing import Callable
 
 from sklearn.datasets import fetch_20newsgroups
-from time import perf_counter
 
-from tuhlbox.stringkernels import intersection_kernel, spectrum_kernel, presence_kernel, \
-    legacy_presence_kernel, legacy_spectrum_kernel, legacy_intersection_kernel
+from tuhlbox.stringkernels import (intersection_kernel,
+                                   legacy_intersection_kernel,
+                                   legacy_presence_kernel,
+                                   legacy_spectrum_kernel, presence_kernel,
+                                   spectrum_kernel)
 
-data = fetch_20newsgroups()['data'][:100]
+data = fetch_20newsgroups()["data"][:100]
 
 
 def benchmark(kernel_method: Callable) -> float:
@@ -25,4 +28,4 @@ kernels = [
 ]
 
 for kernel in kernels:
-    print(f'{kernel.__name__}: {benchmark(kernel)}')
+    print(f"{kernel.__name__}: {benchmark(kernel)}")
