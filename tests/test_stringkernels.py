@@ -2,7 +2,8 @@
 import numpy as np
 from numpy.testing import assert_array_equal
 from tuhlbox.stringkernels import (intersection_kernel, presence_kernel,
-                                   spectrum_kernel)
+                                   spectrum_kernel, legacy_intersection_kernel,
+                                   legacy_spectrum_kernel, legacy_presence_kernel)
 
 docs = [
     "I like this old movie. The movie is very nice.",
@@ -26,6 +27,18 @@ def test_intersection_kernel() -> None:
     assert_array_equal(expected, intersection_kernel(ngram_min, ngram_max)(docs, docs))
 
 
+def test_legacy_intersection_kernel() -> None:
+    """Test intersection kernel by comparing with original code."""
+    # obtained from:
+    # java ComputeStringKernel intersection 1 4 sentences.txt <outfile>
+    expected = np.array(
+        [[178, 95, 66, 49], [95, 254, 72, 72], [66, 72, 278, 112], [49, 72, 112, 334]],
+        dtype=int,
+    )
+    actual = legacy_intersection_kernel(ngram_min, ngram_max)(docs, docs)
+    assert_array_equal(expected, actual)
+
+
 def test_presence_kernel() -> None:
     """Test presence kernel by comparing with original code."""
     # obtained from:
@@ -36,6 +49,19 @@ def test_presence_kernel() -> None:
         dtype=int,
     )
     assert_array_equal(expected, presence_kernel(ngram_min, ngram_max)(docs, docs))
+
+
+def test_legacy_presence_kernel() -> None:
+    """Test presence kernel by comparing with original code."""
+    # obtained from:
+    # java ComputeStringKernel presence 1 4 sentences.txt <outfile>
+
+    expected = np.array(
+        [[128, 67, 42, 29], [67, 197, 38, 42], [42, 38, 209, 64], [29, 42, 64, 235]],
+        dtype=int,
+    )
+    assert_array_equal(expected, legacy_presence_kernel(ngram_min, ngram_max)(docs, docs))
+
 
 
 def test_spectrum_kernel() -> None:
@@ -52,3 +78,19 @@ def test_spectrum_kernel() -> None:
         dtype=int,
     )
     assert_array_equal(expected, spectrum_kernel(ngram_min, ngram_max)(docs, docs))
+
+
+def test_legacy_spectrum_kernel() -> None:
+    """Test spectrum kernel by comparing with original code."""
+    # obtained from:
+    # java ComputeStringKernel spectrum 1 4 sentences.txt <outfile>
+    expected = np.array(
+        [
+            [390, 335, 300, 313],
+            [335, 598, 393, 458],
+            [300, 393, 680, 585],
+            [313, 458, 585, 1006],
+        ],
+        dtype=int,
+    )
+    assert_array_equal(expected, legacy_spectrum_kernel(ngram_min, ngram_max)(docs, docs))
