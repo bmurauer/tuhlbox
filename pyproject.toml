@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "tuhlbox"
-version = "0.4.9"
+version = "0.4.10"
 homepage = "https://git.uibk.ac.at/csak8736/tuhlbox"
 description = "Personal toolbox of language processing models."
 authors = ["Benjamin Murauer <b.murauer@posteo.de>"]
@@ -9,7 +9,7 @@ authors = ["Benjamin Murauer <b.murauer@posteo.de>"]
 python = "^3.7.0"
 sklearn = "^0.0"
 treegrams = "^0.1.0"
-gensim = "^3.8.3"
+gensim = "^4.0.1"
 dstoolbox = "^0.10.1"
 torch = "^1.7.0"
 stanza = "^1.1.1"
