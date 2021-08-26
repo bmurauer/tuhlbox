@@ -106,11 +106,11 @@ class StanzaNlpToFieldTransformer(BaseEstimator, TransformerMixin):
     """
     Flattens a stanford document in the same order as the parsed text.
 
-    Input (Document | Sentence):
-        each document is expected to be a StanfordNLP document or sentence.
-    Output: each document is returned as a single string, where each word is
-        represented as the field that is to be extracted, separated by spaces.
-        Sentences are separated by newlines.
+    Input document:
+        each document is expected to be a StanfordNLP document.
+    Output document: each document is returned as a list of sentences; and each sentence
+        is a list of tags (=strings)
+
     """
 
     def __init__(self, field: str):
@@ -128,11 +128,11 @@ class StanzaNlpToFieldTransformer(BaseEstimator, TransformerMixin):
 
     def transform(
         self, x: Iterable[Union[str, Document, Sentence]], _y: Any = None
-    ) -> List[str]:
+    ) -> List[List[List[str]]]:
         """Transform documents."""
-        result = []
+        result: List[List[List[str]]] = []
         for document in x:
-            document_result: List[str] = []
+            document_result: List[List[str]] = []
             sentences: List[Sentence] = []
             if isinstance(document, Sentence):
                 sentences = [document]
@@ -145,8 +145,8 @@ class StanzaNlpToFieldTransformer(BaseEstimator, TransformerMixin):
                     if label is None:
                         raise ValueError(f"label is None for word: {word}")
                     new_sentence.append(label)
-                document_result.append(" ".join(new_sentence))
-            result.append("\n".join(document_result))
+                document_result.append(new_sentence)
+            result.append(document_result)
         return result
 
 
