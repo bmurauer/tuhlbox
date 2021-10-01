@@ -44,7 +44,8 @@ MODEL_DIR = "translation_data"
     help="transforms corpora created with the reddit script to the dataframe format."
 )
 @click.argument("input_directory")
-def reddit_to_common(input_directory: str) -> None:
+@click.argument("output_directory")
+def reddit_to_common(input_directory: str, output_directory: str) -> None:
     """
     Transform corpora created with reddit scripts into dataframe format.
 
@@ -61,24 +62,21 @@ def reddit_to_common(input_directory: str) -> None:
 
     """
     records = []
+    authors = sorted(os.listdir(input_directory))
 
-    text_directory = os.path.join(input_directory, FEATURE_TEXT)
+    raw_directory = os.path.join(output_directory, "raw")
+    if not os.path.isdir(raw_directory):
+        os.makedirs(raw_directory)
+    processed_directory = os.path.join(output_directory, "processed")
+    if not os.path.isdir(processed_directory):
+        os.makedirs(processed_directory)
+    text_directory = os.path.join(processed_directory, FEATURE_TEXT)
     if not os.path.isdir(text_directory):
         os.makedirs(text_directory)
 
-    old_directory = os.path.join(input_directory, "old")
-    if not os.path.isdir(old_directory):
-        os.makedirs(old_directory)
+    meta_file = os.path.join(processed_directory, DATASET_CSV)
 
-    meta_file = os.path.join(input_directory, DATASET_CSV)
-
-    authors = sorted(os.listdir(input_directory))
     for author in tqdm(authors):
-
-        # don't process these "authors" that might be existing from previous
-        # calls to this script:
-        if author in [os.path.basename(text_directory), os.path.basename(meta_file)]:
-            continue
 
         author_dir = os.path.join(input_directory, author)
         if not os.path.isdir(author_dir):
@@ -96,7 +94,7 @@ def reddit_to_common(input_directory: str) -> None:
                 name = os.path.splitext(name_ext)[0]
                 text_name = f"{author}_{language}_{name}.txt"
                 text_file = os.path.join(FEATURE_TEXT, text_name)
-                full_text_file = os.path.join(input_directory, text_file)
+                full_text_file = os.path.join(processed_directory, text_file)
                 with open(json_file) as i_f, open(full_text_file, "w") as o_f:
                     js = json.load(i_f)
                     o_f.write(js["body_clean"])
@@ -107,7 +105,7 @@ def reddit_to_common(input_directory: str) -> None:
                     records.append(js)
 
         # move old author dir
-        shutil.move(author_dir, old_directory)
+    shutil.copytree(input_directory, raw_directory, dirs_exist_ok=True)
 
     df = pd.DataFrame.from_records(records)
     df.to_csv(meta_file, index=False)
@@ -208,9 +206,7 @@ def parse_dependency(
 @click.option("-t", "--text-column-name", default=FEATURE_TEXT)
 @click.option("-l", "--language-column-name", default=LANGUAGE_COLUMN)
 def parse_constituency(
-        input_directory: str,
-        text_column_name: str,
-        language_column_name: str
+    input_directory: str, text_column_name: str, language_column_name: str
 ) -> None:
     """
     Ignore this method for the time being.
@@ -345,9 +341,9 @@ class Translator:
 @click.argument("source")
 @click.argument("target")
 def translate(
-        input_dir: str,
-        source: str,
-        target: str,
+    input_dir: str,
+    source: str,
+    target: str,
 ) -> None:
     """
     Translate common datafrarme corpora.
