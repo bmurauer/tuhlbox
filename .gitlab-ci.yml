@@ -2,14 +2,16 @@ image: python:3.7
 
 tests:
   before_script:
-    - echo $HOME
-    - echo $HTTP_PROXY
-    - echo $HTTPS_PROXY
+    - date
     - curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
     - source $HOME/.poetry/env
     - poetry config virtualenvs.create false
+    - date
     - poetry install
+    - date
     - python -m nltk.downloader punkt
+    - date
     - python -c 'import stanza; stanza.download("en")'
+    - date
   script:
     - pytest tests
