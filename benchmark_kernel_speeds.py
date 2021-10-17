@@ -3,11 +3,14 @@ from typing import Callable
 
 from sklearn.datasets import fetch_20newsgroups
 
-from tuhlbox.stringkernels import (intersection_kernel,
-                                   legacy_intersection_kernel,
-                                   legacy_presence_kernel,
-                                   legacy_spectrum_kernel, presence_kernel,
-                                   spectrum_kernel)
+from tuhlbox.stringkernels import (
+    intersection_kernel,
+    legacy_intersection_kernel,
+    legacy_presence_kernel,
+    legacy_spectrum_kernel,
+    presence_kernel,
+    spectrum_kernel,
+)
 
 data = fetch_20newsgroups()["data"][:100]
 

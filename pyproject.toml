@@ -16,6 +16,7 @@ stanza = "^1.1.1"
 simpletransformers = "^0.51.1"
 click = "^7.1.2"
 skorch = "^0.10.0"
+langdetect = "^1.0.9"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
@@ -29,6 +30,7 @@ pandas-stubs = "^1.1.0"
 reddit_to_common = "tuhlbox.cli:reddit_to_common"
 parse_dependency = "tuhlbox.cli:parse_dependency"
 translate = "tuhlbox.cli:translate"
+contribute = "tuhlbox.cli:run_contributor"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

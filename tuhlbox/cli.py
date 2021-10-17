@@ -20,6 +20,11 @@ from tqdm import tqdm  # type: ignore
 from transformers import MarianMTModel, MarianTokenizer  # type: ignore
 
 import stanza  # type: ignore
+from tuhlbox.contributors import (
+    StanzaContributor,
+    LanguageDetectionContributor,
+    LinguisticStatsContributor,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -403,3 +408,20 @@ def translate(
     df2 = pd.DataFrame.from_records(new_rows)
     df3 = pd.concat([df, df2])
     df3.to_csv(os.path.join(input_dir, "dataset.csv"), index=False)
+
+
+@click.command(help="run a contributor on a dataset")
+@click.argument("csv")
+@click.argument("contributor")
+def run_contributor(csv, contributor):
+    available_contributors = dict(
+        stanza=StanzaContributor,
+        detect_language=LanguageDetectionContributor,
+        linguistic_stats=LinguisticStatsContributor,
+    )
+    if contributor not in available_contributors.keys():
+        raise Error(
+            f'contributor "{contributor}" not found.'
+            f"available contributors: {available_contributors.keys()}"
+        )
+    available_contributors[contributor].contribute(csv)

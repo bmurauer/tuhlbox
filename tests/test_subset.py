@@ -7,10 +7,10 @@ def test_subset_vectorizer() -> None:
     transformer = SubFrequencyVectorizer()
 
     texts = [
-        'male boy man girly ',
-        'female girly woman boy boy woman',
-        'super duper super man ',
-        'man manly boy man',
+        "male boy man girly ",
+        "female girly woman boy boy woman",
+        "super duper super man ",
+        "man manly boy man",
     ]
     targets = [0, 1, 2]
 

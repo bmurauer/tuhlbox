@@ -76,7 +76,5 @@ def intersection_kernel(x: np.array, y: np.array) -> np.array:
         for j, yc in enumerate(y_counts):
             keys_y = set(yc.keys())
             common_ngrams = set(keys_x).intersection(set(keys_y))
-            result[i, j] = sum(
-                [min(xc[ngram], yc[ngram]) for ngram in common_ngrams]
-            )
+            result[i, j] = sum([min(xc[ngram], yc[ngram]) for ngram in common_ngrams])
     return result

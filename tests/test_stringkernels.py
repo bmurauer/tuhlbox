@@ -2,8 +2,7 @@
 import numpy as np
 from dstoolbox.transformers import TextFeaturizer
 from numpy.testing import assert_array_equal
-from tuhlbox.stringkernels import (intersection_kernel, presence_kernel,
-                                   spectrum_kernel)
+from tuhlbox.stringkernels import intersection_kernel, presence_kernel, spectrum_kernel
 
 docs = [
     "i like this old movie. the movie is very nice.",
@@ -25,7 +24,7 @@ def test_intersection_kernel() -> None:
         dtype=int,
     )
 
-    tf = TextFeaturizer(analyzer='char', ngram_range=(ngram_min, ngram_max))
+    tf = TextFeaturizer(analyzer="char", ngram_range=(ngram_min, ngram_max))
     ngrams = tf.fit_transform(docs)
     assert_array_equal(expected, intersection_kernel(ngrams, ngrams))
 
@@ -38,7 +37,7 @@ def test_presence_kernel() -> None:
         [[128, 67, 42, 29], [67, 197, 38, 42], [42, 38, 209, 64], [29, 42, 64, 235]],
         dtype=int,
     )
-    tf = TextFeaturizer(analyzer='char', ngram_range=(ngram_min, ngram_max))
+    tf = TextFeaturizer(analyzer="char", ngram_range=(ngram_min, ngram_max))
     ngrams = tf.fit_transform(docs)
     assert_array_equal(expected, presence_kernel(ngrams, ngrams))
 
@@ -56,7 +55,7 @@ def test_spectrum_kernel() -> None:
         ],
         dtype=int,
     )
-    tf = TextFeaturizer(analyzer='char', ngram_range=(ngram_min, ngram_max))
+    tf = TextFeaturizer(analyzer="char", ngram_range=(ngram_min, ngram_max))
     ngrams = tf.fit_transform(docs)
     assert_array_equal(expected, spectrum_kernel(ngrams, ngrams))
 
@@ -64,18 +63,16 @@ def test_spectrum_kernel() -> None:
 def test_kernels_with_non_strings() -> None:
     """Tests the presence kernel with documents not consisting of strings."""
 
-    ngrams = [
-        [1, 2, 3, 3, 2],
-        [2, 3, 3, 1, 4],
-        [6, 7, 5, 1, 2]
-    ]
+    ngrams = [[1, 2, 3, 3, 2], [2, 3, 3, 1, 4], [6, 7, 5, 1, 2]]
 
-    expected = np.array([
-        [3, 3, 2],  # the first document has 4 elements common to itself,
-                    # 4 elements in common with the second document
-                    # and 2 documents in common with the last document.
-        [3, 4, 2],
-        [2, 2, 5]
-    ])
+    expected = np.array(
+        [
+            [3, 3, 2],  # the first document has 4 elements common to itself,
+            # 4 elements in common with the second document
+            # and 2 documents in common with the last document.
+            [3, 4, 2],
+            [2, 2, 5],
+        ]
+    )
     actual = presence_kernel(ngrams, ngrams)
     assert_array_equal(expected, actual)

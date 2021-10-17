@@ -6,8 +6,8 @@ from tuhlbox.doc2vec import Doc2VecTransformer
 def test_transformation() -> None:
     """Expect a correct vector size."""
     documents = [
-        word_tokenize('This is an example sentence.'),
-        word_tokenize('This is a second piece of text.'),
+        word_tokenize("This is an example sentence."),
+        word_tokenize("This is a second piece of text."),
     ]
 
     transformer = Doc2VecTransformer(vector_size=123)
