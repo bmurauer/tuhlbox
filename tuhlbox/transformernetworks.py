@@ -85,8 +85,8 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
 
     def fit(
         self,
-        x: Union[List[str], np.array],
-        y: Union[List[str], np.array],
+        x: Union[List[str], np.ndarray],
+        y: Union[List[str], np.ndarray],
         *_args: Any,
         **_kwargs: Any,
     ) -> SimpletransformersBertModel:
@@ -95,6 +95,13 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
         y = self.label_encoder.fit_transform(y)
         targets = set(y)
         n_classes = len(targets)
+        self.classes_ = targets
+
+        # sklearn requires x to always be two-dimensional.
+        # however, older plans might use one-dimensional xs, and the remainder of this
+        # script will use only one dimension.
+        if type(x[0]) is not str:
+            x = x[:, 0]  # type: ignore
 
         for target in targets:
             if target >= n_classes:
@@ -152,11 +159,15 @@ class SimpletransformersBertModel(BaseEstimator, ClassifierMixin):
 
     def predict(
         self,
-        x: Union[List[str], np.array],
+        x: Union[List[str], np.ndarray],
         *_args: Any,
         **_kwargs: Any,
-    ) -> Union[List[str], np.array]:
+    ) -> Union[List[str], np.ndarray]:
         """Predict unseen documents."""
+        # sklearn requires x to always be two-dimensional.
+        # however, older plans might use one-dimensional xs.
+        if type(x[0]) is not str:
+            x = x[:, 0]  # type: ignore
         result, raw = self.model.predict(x)
         result = self.label_encoder.inverse_transform(result)
         return result
