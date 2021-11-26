@@ -1,8 +1,10 @@
 """Test String-Kernel based models."""
+
 import numpy as np
 from dstoolbox.transformers import TextFeaturizer
-from numpy.testing import assert_array_equal
-from tuhlbox.stringkernels import intersection_kernel, presence_kernel, spectrum_kernel
+from numpy.testing import assert_array_almost_equal, assert_array_equal
+from tuhlbox.stringkernels import (intersection_kernel, pqgram_kernel,
+                                   presence_kernel, spectrum_kernel)
 
 docs = [
     "i like this old movie. the movie is very nice.",
@@ -60,10 +62,52 @@ def test_spectrum_kernel() -> None:
     assert_array_equal(expected, spectrum_kernel(ngrams, ngrams))
 
 
+def test_pqgram_kernel() -> None:
+
+    # these example values are taken from the paper
+    x = np.array(
+        [
+            [
+                "*-a-*-*-a",
+                "a-a-*-*-e",
+                "a-e-*-*-*",
+                "a-a-*-e-b",
+                "a-b-*-*-*",
+                "a-a-e-b-*",
+                "a-a-b-*-*",
+                "*-a-*-a-b",
+                "a-b-*-*-*",
+                "*-a-a-b-c",
+                "a-c-*-*-*",
+                "*-a-b-c-*",
+                "*-a-c-*-*",
+            ],
+            [
+                "*-a-*-*-a",
+                "a-a-*-*-e",
+                "a-e-*-*-*",
+                "a-a-*-e-b",
+                "a-b-*-*-*",
+                "a-a-e-b-*",
+                "a-a-b-*-*",
+                "*-a-*-a-b",
+                "a-b-*-*-*",
+                "*-a-a-b-d",
+                "a-d-*-*-*",
+                "*-a-b-d-*",
+                "*-a-d-*-*",
+            ],
+        ]
+    )
+
+    expected = np.array([[0, 0.470588], [0.470588, 0]])
+    assert_array_almost_equal(expected, pqgram_kernel(x, x))
+
+
 def test_kernels_with_non_strings() -> None:
     """Tests the presence kernel with documents not consisting of strings."""
 
-    ngrams = [[1, 2, 3, 3, 2], [2, 3, 3, 1, 4], [6, 7, 5, 1, 2]]
+    ngrams = np.array([[1, 2, 3, 3, 2], [2, 3, 3, 1, 4], [6, 7, 5, 1, 2]])
 
     expected = np.array(
         [
