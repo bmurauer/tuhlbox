@@ -86,19 +86,15 @@ def intersection_kernel(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     return _multiset_kernel(x, y, lambda xc, yc: sum((xc & yc).values()))
 
 
-def pqgram_distance(xc: collections.Counter, yc: collections.Counter) -> float:
-    # this is a bag-union, which is not the default union of counters in python
-    xc_union: collections.Counter = xc.copy()
-    xc_union.update(yc)
-    union = sum(xc_union.values())
-    intersection = sum((xc & yc).values())
-
-    # eq. (2) and (3) of Augsten et al. 2010
-    return (union - 2 * intersection) / (union - intersection)
-
-
 def pqgram_kernel(x: np.ndarray, y: np.ndarray) -> np.ndarray:
     """
     Calculates a distance kernel based on the PQ-gram distance by Austen et al. 2010.
     """
+
+    def pqgram_distance(xc: collections.Counter, yc: collections.Counter) -> float:
+        union = sum((xc + yc).values())  # bag union
+        intersection = sum((xc & yc).values())
+        # eq. (2) and (3) of Augsten et al. 2010
+        return (union - 2 * intersection) / (union - intersection)
+
     return _multiset_kernel(x, y, pqgram_distance)
