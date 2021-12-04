@@ -63,14 +63,16 @@ class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
 
     def transform(self, X: Iterable[str], _y: Any = None) -> np.ndarray:
         """Transform data due to previously learned frequencies."""
-        result: List[int] = []
+        result: List[np.ndarray] = []
         for k in X:
-            document_sum = 0
+            document_sum: np.ndarray = np.array([])
             doc_words = k.split()
             for j in doc_words:
                 if j not in self.t:
                     continue
+                if document_sum.shape[0] == 0:
+                    document_sum = np.zeros(self.t[j].shape)
                 tf = doc_words.count(j)
-                document_sum += int(self.t[j] * tf / len(doc_words))
+                document_sum += self.t[j] * tf / len(doc_words)
             result.append(document_sum)
         return np.array(result)
