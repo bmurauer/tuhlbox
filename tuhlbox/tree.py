@@ -1,7 +1,7 @@
 """Transformers working on NLTK tree objects."""
 from __future__ import annotations
 
-from typing import Any, Iterable, List, Union
+from typing import Any, List, Union
 
 import nltk
 import numpy as np
@@ -178,7 +178,7 @@ class TreeChainTransformer(BaseEstimator, TransformerMixin):
         return result
 
 
-def _get_average_height(document: List[nltk.Tree]) -> np.array:
+def _get_average_height(document: List[nltk.Tree]) -> float:
     """Calculate the average height of all trees in a document."""
     return np.average([tree.height() for tree in document])
 
@@ -194,14 +194,14 @@ def _calculate_average_children(tree: nltk.Tree) -> List[int]:
     return result
 
 
-def _get_average_children(document: List[nltk.Tree]) -> np.array:
+def _get_average_children(document: List[nltk.Tree]) -> float:
     result = []
     for tree in document:
         result += _calculate_average_children(tree)
     return np.average(result)
 
 
-def _get_average_inner_to_leaf_ratio(document: List[nltk.Tree]) -> np.array:
+def _get_average_inner_to_leaf_ratio(document: List[nltk.Tree]) -> float:
     result = []
     for tree in document:
         num_leaves = len(tree.leaves())
@@ -218,7 +218,7 @@ def _get_max_tree_width(tree: nltk.Tree) -> int:
     return maximum
 
 
-def _get_max_child_width(document: List[nltk.Tree]) -> np.array:
+def _get_max_child_width(document: List[nltk.Tree]) -> float:
     result = []
     for tree in document:
         result.append(_get_max_tree_width(tree))

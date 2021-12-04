@@ -3,11 +3,8 @@ from typing import Callable
 
 from sklearn.datasets import fetch_20newsgroups
 
-from tuhlbox.stringkernels import (
+from tuhlbox.stringkernels import (  # legacy_intersection_kernel,; legacy_presence_kernel,; legacy_spectrum_kernel,
     intersection_kernel,
-    legacy_intersection_kernel,
-    legacy_presence_kernel,
-    legacy_spectrum_kernel,
     presence_kernel,
     spectrum_kernel,
 )
@@ -23,11 +20,11 @@ def benchmark(kernel_method: Callable) -> float:
 
 kernels = [
     intersection_kernel,
-    legacy_intersection_kernel,
+    # legacy_intersection_kernel,
     presence_kernel,
-    legacy_presence_kernel,
+    # legacy_presence_kernel,
     spectrum_kernel,
-    legacy_spectrum_kernel,
+    # legacy_spectrum_kernel,
 ]
 
 for kernel in kernels:

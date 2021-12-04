@@ -83,7 +83,7 @@ class Doc2VecTransformer(TransformerMixin, BaseEstimator):
     def fit(
         self,
         documents: List[List[str]],
-        labels: Union[List[str], np.array] = None,
+        labels: Union[List[str], np.ndarray] = None,
         **fit_params: Any
     ) -> Doc2VecTransformer:
         """Fit the model by learning the training corpus."""
@@ -99,7 +99,7 @@ class Doc2VecTransformer(TransformerMixin, BaseEstimator):
         )
         return self
 
-    def transform(self, documents: List[List[str]]) -> np.array:
+    def transform(self, documents: List[List[str]]) -> np.ndarray:
         """Infer the vectors for documents."""
         documents = [[str(x) for x in document] for document in documents]
         _sanity_check(documents)

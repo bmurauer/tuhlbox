@@ -4,7 +4,8 @@ from __future__ import annotations
 import logging
 import math
 from collections import defaultdict
-from typing import Any, Dict, Iterable, List
+from functools import partial
+from typing import Any, DefaultDict, Dict, Iterable, List
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -17,7 +18,9 @@ class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
 
     def __init__(self) -> None:
         """Initialize the model."""
-        self.t: Dict[str, np.array] = defaultdict(np.array)
+        self.t: DefaultDict[str, np.ndarray] = defaultdict(
+            partial(np.ndarray, 0)
+        )  # type:ignore
 
     def fit(
         self, X: List[str], y: Iterable[str], **_fit_params: Any
@@ -58,9 +61,9 @@ class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
 
         return self
 
-    def transform(self, X: Iterable[str], _y: Any = None) -> np.array:
+    def transform(self, X: Iterable[str], _y: Any = None) -> np.ndarray:
         """Transform data due to previously learned frequencies."""
-        result = []
+        result: List[int] = []
         for k in X:
             document_sum = 0
             doc_words = k.split()
@@ -68,6 +71,6 @@ class SubFrequencyVectorizer(BaseEstimator, TransformerMixin):
                 if j not in self.t:
                     continue
                 tf = doc_words.count(j)
-                document_sum += self.t[j] * tf / len(doc_words)
+                document_sum += int(self.t[j] * tf / len(doc_words))
             result.append(document_sum)
         return np.array(result)

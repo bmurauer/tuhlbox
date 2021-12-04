@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import random
 from collections import defaultdict
-from typing import List, Union, Dict
+from typing import Dict, List, Union
 
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -75,13 +75,13 @@ class LifeVectorizer(BaseEstimator, TransformerMixin):
         self.sample_type = sample_type
         self.force = force
 
-    def fit(self, _x: List[str], _y: Union[List, np.array] = None) -> LifeVectorizer:
+    def fit(self, _x: List[str], _y: Union[List, np.ndarray] = None) -> LifeVectorizer:
         """Fit the model."""
         return self
 
     def sample(
         self,
-        words: Union[List[str], np.array],
+        words: List[str],
         fragment_size: int,
         method: str,
     ) -> List[List[str]]:
@@ -120,7 +120,7 @@ class LifeVectorizer(BaseEstimator, TransformerMixin):
         self,
         document: List[str],
         sample_size: int,
-    ) -> np.array:
+    ) -> np.ndarray:
         """Extract features from a document given a sample size."""
         if self.sample_type == "both":
             return np.concatenate(
@@ -137,12 +137,12 @@ class LifeVectorizer(BaseEstimator, TransformerMixin):
         document: List[str],
         fragment_size: int,
         method: str,
-    ) -> np.array:
+    ) -> np.ndarray:
         samples = self.sample(document, fragment_size, method)
-        features = []
+        features_as_list = []
         for sample in samples:
-            features.append(get_features_for_sample(sample))
-        features = np.array(features)
+            features_as_list.append(get_features_for_sample(sample))
+        features = np.array(features_as_list)
         means = np.mean(features, axis=0)
         stds = np.std(features, axis=0)
         return np.concatenate(
@@ -150,8 +150,8 @@ class LifeVectorizer(BaseEstimator, TransformerMixin):
         )
 
     def transform(
-        self, x: List[List[str]], _y: Union[List, np.array] = None
-    ) -> np.array:
+        self, x: List[List[str]], _y: Union[List, np.ndarray] = None
+    ) -> np.ndarray:
         """Calculate samples and extracts features from documents."""
         ret = []
         for document in x:
