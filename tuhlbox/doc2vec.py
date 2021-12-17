@@ -46,7 +46,7 @@ class Doc2VecTransformer(TransformerMixin, BaseEstimator):
         alpha: float = 0.025,
         min_alpha: float = 0.00025,
         min_count: int = 2,
-        distributed_memory: int = 1,
+        algorithm: str = "dm",
         workers: int = 1,
     ):
         """
@@ -59,24 +59,32 @@ class Doc2VecTransformer(TransformerMixin, BaseEstimator):
             alpha: alpha of the gensim model
             min_alpha: min_alpha of the gensim model
             min_count: min number of occurrences for each word
-            distributed_memory: whether to use distributed memory model or not
+            algorithm: whether to use distributed memory ("dm") or distributed bag of words ("dbow")
             workers: number of threads
         """
+
+        valid_algorithms = {
+            "dm": 1,
+            "dbow": 0,
+        }
+        if algorithm not in valid_algorithms:
+            raise Exception("invalid algorithm: {} - valid algorithms are: {}".format(algorithm, valid_algorithms.keys()))
+
         self.learning_rate = learning_rate
         self.epochs = epochs
         self.vector_size = vector_size
         self.alpha = alpha
         self.min_alpha = min_alpha
         self.min_count = min_count
-        self.distributed_memory = distributed_memory
         self.workers = workers
+        self.algorithm = algorithm
 
         self.model = Doc2Vec(
             vector_size=vector_size,
             alpha=alpha,
             min_alpha=min_alpha,
             min_count=min_count,
-            dm=distributed_memory,
+            dm=valid_algorithms[algorithm],
             workers=workers,
         )
 
